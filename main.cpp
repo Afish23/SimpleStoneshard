@@ -62,5 +62,5 @@ int main() {
     // 打印最终迷宫
     cout << "\n生成的迷宫如下：\n";
     print_maze(maze);
-    return 0;
+	return 0;
 }
