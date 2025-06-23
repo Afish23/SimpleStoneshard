@@ -4,6 +4,6 @@
 using namespace std;
 class MazeGenerator {
 public:
-	void generate(int n);   
+	void generate(int n);
 
 };
