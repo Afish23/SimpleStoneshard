@@ -17,7 +17,7 @@ public:
     int hp;
     int gold;
     int attackPower;
-    Player(int x = 0, int y = 0, int hp = 100, int gold, int attackPower = 20);
+    Player(int x = 0, int y = 0, int hp = 100, int gold=0, int attackPower = 20);
     void move(int dx, int dy);
     void addGold(int amount);
     void takeDamage(int dmg);
