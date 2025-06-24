@@ -143,4 +143,18 @@ void MazeGenerator::printMaze(const vector<vector<MazeCell>>& maze) {
     MazeGenerator::writeMazeToJson(maze, "maze.json");
 }
 
-    
+// 工厂函数，根据字符生成对象
+shared_ptr<GameObject> MazeGenerator::createObject(char c, int x, int y) {
+    switch (c) {
+    case '#': return make_shared<GameObject>(x, y, '#'); // 墙
+    case 'S': return make_shared<Player>(x, y, 100, 0, 20); // 玩家
+    case 'E': return make_shared<GameObject>(x, y, 'E'); // 出口（你可以新建 Exit 类）
+    case ' ': return make_shared<GameObject>(x, y, ' '); // 通道
+    case 'B': return make_shared<Boss>(x, y, 200, 30, 50, false, vector<Skill>());  // Boss
+    case 'G': return make_shared<Gold>(x, y);         // 金币
+    case 'T': return make_shared<Track>(x, y);        // 陷阱
+    case 'L': return make_shared<Locker>(x, y);       // 宝箱
+    default:  return nullptr;
+    }
+}
+
