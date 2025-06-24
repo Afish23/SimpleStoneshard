@@ -26,9 +26,9 @@ vector<vector<MazeCell>> MazeGenerator::generateMaze(int size,
         auto paths = getAllPaths(maze);
         if (paths.size() < 2) continue;
 
-        /*random_shuffle(paths.begin(), paths.end());
+        random_shuffle(paths.begin(), paths.end());
         startPos = paths[0];
-        exitPos = paths[1];*/
+        exitPos = paths[1];
         maze[startPos.first][startPos.second].type = START;
         maze[exitPos.first][exitPos.second].type = EXIT;
 
