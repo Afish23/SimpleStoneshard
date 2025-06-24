@@ -27,14 +27,14 @@ struct MazeCell {
 class MazeGenerator {
 public:
     // 生成迷宫主函数
-    static vector<vector<MazeCell>> generateMaze(int size, 
-                                              int goldCount, 
-                                              int trapCount, 
-                                              int lockerCount, 
-                                              int bossCount,
-                                              pair<int, int>& startPos,
-                                              pair<int, int>& exitPos);
-    
+    static vector<vector<MazeCell>> generateMaze(int size,
+        int goldCount,
+        int trapCount,
+        int lockerCount,
+        int bossCount,
+        pair<int, int>& startPos,
+        pair<int, int>& exitPos);
+
     // 打印迷宫
     static void printMaze(const vector<vector<MazeCell>>& maze);
     // 分治法生成迷宫
