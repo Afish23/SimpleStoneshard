@@ -47,7 +47,7 @@ vector<vector<MazeCell>> MazeGenerator::generateMaze(int size,
 
 void MazeGenerator::divide(vector<vector<MazeCell>>& maze, int x1, int y1, int x2, int y2) {
     if (x2 - x1 < 2 || y2 - y1 < 2) return;
-    bool horizontal = (rand() % 2 == 0);
+    bool horizontal = rand() % 2 ;
 
     if (horizontal) {
         int split_row = x1 + 1 + rand() % (x2 - x1 - 1);
