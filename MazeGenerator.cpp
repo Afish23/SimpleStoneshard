@@ -120,17 +120,20 @@ void MazeGenerator::placeRandomElements(vector<vector<MazeCell>>& maze,
 }
 void MazeGenerator::writeMazeToJson(const vector<vector<MazeCell>>& maze, const string& filename) {
     int n = maze.size();
-    json j;
-    j["maze"] = nlohmann::json::array();
-    for (int i = 0; i < n; ++i) {
-        nlohmann::json row = nlohmann::json::array();
-        for (int j2 = 0; j2 < maze[i].size(); ++j2) {
-            row.push_back(std::string(1, maze[i][j2].type));
-        }
-        j["maze"].push_back(row);
-    }
+    int m = maze[0].size();
     std::ofstream fout(filename);
-    fout << j.dump(4); // 带缩进美观输出
+    fout << "{\n  \"maze\": [\n";
+    for (int i = 0; i < n; ++i) {
+        fout << "    [";
+        for (int j2 = 0; j2 < m; ++j2) {
+            fout << "\"" << maze[i][j2].type << "\"";
+            if (j2 != m - 1) fout << ",";
+        }
+        fout << "]";
+        if (i != n - 1) fout << ",";
+        fout << "\n";
+    }
+    fout << "  ]\n}\n";
     fout.close();
 }
 void MazeGenerator::printMaze(const vector<vector<MazeCell>>& maze) {
