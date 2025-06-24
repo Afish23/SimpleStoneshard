@@ -127,3 +127,9 @@ void MazeGenerator::printMaze(const vector<vector<MazeCell>>& maze) {
         cout << endl;
     }
 }
+ void MazeGenerator::printMaze(const vector<vector<char>>& maze) {
+    for (const auto& row : maze) {
+        for (char c : row) std::cout << c << " ";
+        std::cout << std::endl;
+    }
+}

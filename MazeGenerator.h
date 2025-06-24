@@ -37,6 +37,8 @@ public:
     
     // 打印迷宫
     static void printMaze(const vector<vector<MazeCell>>& maze);
+    static void printMaze(const vector<vector<char>>& maze);
+    //static void printMaze1(const std::vector<std::vector<char>>& maze);
     // 分治法生成迷宫
     static void divide(vector<vector<MazeCell>>& maze, int x1, int y1, int x2, int y2);
 

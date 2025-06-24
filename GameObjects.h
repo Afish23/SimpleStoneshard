@@ -1,6 +1,8 @@
 #pragma once
 // 游戏对象定义模块，采用基类与派生类结构
 #include <iostream>
+#include <set>
+#include <utility>
 
 // 游戏对象基类，含有所有共性属性
 class GameObject {
@@ -9,6 +11,9 @@ public:
     char type;
     GameObject(int x = 0, int y = 0, char type = '#');
     virtual ~GameObject() {}
+    /*pair<int, int> getPosition() const {
+        return { x, y };
+    }*/
 };
 
 // 玩家类
@@ -24,6 +29,7 @@ public:
     void heal(int amount);
     // 玩家普攻技能
     void normalAttack(class Boss& boss);
+    void getPosition();
 };
 
 // Boss类
