@@ -1,15 +1,4 @@
-#ifndef MAZE_GENERATOR_H  // 防止头文件重复包含的宏保护
-#define MAZE_GENERATOR_H
-
-// 项目自定义头文件（需确保路径正确）
-#include "BossFightStrategy.h"
-#include "GameObjects.h"
-#include "GreedyResourcePicker.h"
-#include "PuzzleSolver.h"
-#include "ResourcePathPlanner.h"
-#include "Utils.h"
-
-// 标准库头文件
+#pragma once
 #include <vector>
 #include <queue>
 #include <utility>
@@ -18,8 +7,9 @@
 #include <algorithm>
 #include <set>
 #include <iostream>
+using namespace std;
 
-// 迷宫元素常量定义
+// 定义迷宫单元格类型
 const char WALL = '#';
 const char PATH = ' ';
 const char START = 'S';
@@ -29,17 +19,38 @@ const char TRAP = 'T';
 const char LOCKER = 'L';
 const char BOSS = 'B';
 
-// 迷宫单元格结构体
 struct MazeCell {
     char type;
     MazeCell() : type(PATH) {}  // 构造函数默认初始化为通路
 };
 
-// 函数原型声明（仅写“函数头”，无实现）
-void divide(std::vector<std::vector<MazeCell>>& maze, int x1, int y1, int x2, int y2);
-bool is_connected(const std::vector<std::vector<MazeCell>>& maze, std::pair<int, int> start, std::pair<int, int> exit);
-std::vector<std::pair<int, int>> get_all_paths(const std::vector<std::vector<MazeCell>>& maze);
-void place_random_elements(std::vector<std::vector<MazeCell>>& maze, char elem, int count, const std::set<std::pair<int, int>>& forbidden);
-void print_maze(const std::vector<std::vector<MazeCell>>& maze);
+class MazeGenerator {
+public:
+    // 生成迷宫主函数
+    static vector<vector<MazeCell>> generateMaze(int size, 
+                                              int goldCount, 
+                                              int trapCount, 
+                                              int lockerCount, 
+                                              int bossCount,
+                                              pair<int, int>& startPos,
+                                              pair<int, int>& exitPos);
+    
+    // 打印迷宫
+    static void printMaze(const vector<vector<MazeCell>>& maze);
+    // 分治法生成迷宫
+    static void divide(vector<vector<MazeCell>>& maze, int x1, int y1, int x2, int y2);
 
-#endif  // MAZE_GENERATOR_H
+    // 检查连通性
+    static bool isConnected(const vector<vector<MazeCell>>& maze,
+        pair<int, int> start,
+        pair<int, int> exit);
+
+    // 获取所有通路
+    static vector<pair<int, int>> getAllPaths(const vector<vector<MazeCell>>& maze);
+
+    // 随机放置元素
+    static void placeRandomElements(vector<vector<MazeCell>>& maze,
+        char elem,
+        int count,
+        const set<pair<int, int>>& forbidden);
+};
