@@ -9,7 +9,7 @@
 #include <iostream>
 using namespace std;
 
-// 定义迷宫单元格类型
+// 露篓脪氓脙脭鹿卢碌楼脭陋赂帽脌脿脨脥
 const char WALL = '#';
 const char PATH = ' ';
 const char START = 'S';
@@ -21,12 +21,13 @@ const char BOSS = 'B';
 
 struct MazeCell {
     char type;
-    MazeCell() : type(PATH) {}  // 构造函数默认初始化为通路
+    MazeCell() : type(PATH) {}  // 鹿鹿脭矛潞炉脢媒脛卢脠脧鲁玫脢录禄炉脦陋脥篓脗路
 };
 
 class MazeGenerator {
 public:
-    // 生成迷宫主函数
+
+    // 脡煤鲁脡脙脭鹿卢脰梅潞炉脢媒
     static vector<vector<MazeCell>> generateMaze(int size, 
                                               int goldCount, 
                                               int trapCount, 
@@ -35,22 +36,23 @@ public:
                                               pair<int, int>& startPos,
                                               pair<int, int>& exitPos);
     
-    // 打印迷宫
+    // 麓貌脫隆脙脭鹿卢
     static void printMaze(const vector<vector<MazeCell>>& maze);
-    // 分治法生成迷宫
+    // 路脰脰脦路篓脡煤鲁脡脙脭鹿卢
     static void divide(vector<vector<MazeCell>>& maze, int x1, int y1, int x2, int y2);
 
-    // 检查连通性
+    // 录矛虏茅脕卢脥篓脨脭
     static bool isConnected(const vector<vector<MazeCell>>& maze,
         pair<int, int> start,
         pair<int, int> exit);
 
-    // 获取所有通路
+    // 禄帽脠隆脣霉脫脨脥篓脗路
     static vector<pair<int, int>> getAllPaths(const vector<vector<MazeCell>>& maze);
 
-    // 随机放置元素
+    // 脣忙禄煤路脜脰脙脭陋脣脴
     static void placeRandomElements(vector<vector<MazeCell>>& maze,
         char elem,
         int count,
         const set<pair<int, int>>& forbidden);
+	void generate(int n);
 };
