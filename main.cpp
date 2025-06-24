@@ -37,5 +37,41 @@ int main() {
     cout << "\n生成的迷宫如下：\n";
     MazeGenerator::printMaze(maze);
 
+    // 1. 读取JSON文件      需进行拆分，当前思路，做主界面，分成两个功能，1，随机生成迷宫；2.读取文件并开始游戏
+    ifstream fin("maze.json");
+    if (!fin) {
+        cerr << "无法打开maze.json文件" << endl;
+        return 1;
+    }
+    json j;
+    fin >> j;
+
+    // 2. 获取迷宫数组
+    auto maze_arr = j["maze"];
+    int nn = maze_arr.size();
+    int m = maze_arr[0].size();
+
+    // 3. 初始化二维智能指针数组
+    vector<vector<shared_ptr<GameObject>>> maze_objs(nn, vector<shared_ptr<GameObject>>(m, nullptr));
+
+    // 4. 根据字符实例化对象
+    for (int i = 0; i < nn; ++i) {
+        for (int j2 = 0; j2 < m; ++j2) {
+            char c = maze_arr[i][j2].get<string>()[0];
+            maze_objs[i][j2] = MazeGenerator::createObject(c, i, j2);
+        }
+    }
+
+    // 5. 输出测试
+   /* for (int i = 0; i < nn; ++i) {
+        for (int j2 = 0; j2 < m; ++j2) {
+            if (maze_objs[i][j2])
+                cout << maze_objs[i][j2]->type << ' ';
+            else
+                cout << "? ";
+        }
+        cout << endl;
+    }*/
+
     return 0;
 }

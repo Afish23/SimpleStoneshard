@@ -9,8 +9,9 @@
 #include <iostream>
 #include <fstream>
 #include "json.hpp"
+#include"GameObjects.h"
 using namespace std;
-
+using json = nlohmann::json;
 // 定义迷宫单元格类型
 const char WALL = '#';
 const char PATH = ' ';
@@ -58,4 +59,5 @@ public:
 
     //写入json文件
     static void writeMazeToJson(const vector<vector<MazeCell>>& maze, const string& filename);
+    static shared_ptr<GameObject> createObject(char c, int x, int y);
 };
