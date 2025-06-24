@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <set>
 #include <iostream>
+#include <fstream>
+#include "json.hpp"
 using namespace std;
 
 // 定义迷宫单元格类型
@@ -53,4 +55,7 @@ public:
         char elem,
         int count,
         const set<pair<int, int>>& forbidden);
+
+    //写入json文件
+    static void writeMazeToJson(const vector<vector<MazeCell>>& maze, const string& filename);
 };
