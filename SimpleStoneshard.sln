@@ -11,6 +11,8 @@ Global
 		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		头文件|x64 = 头文件|x64
+		头文件|x86 = 头文件|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{F48CAEC1-009B-499C-8311-747FBB2224A6}.Debug|x64.ActiveCfg = Debug|x64
@@ -21,6 +23,10 @@ Global
 		{F48CAEC1-009B-499C-8311-747FBB2224A6}.Release|x64.Build.0 = Release|x64
 		{F48CAEC1-009B-499C-8311-747FBB2224A6}.Release|x86.ActiveCfg = Release|Win32
 		{F48CAEC1-009B-499C-8311-747FBB2224A6}.Release|x86.Build.0 = Release|Win32
+		{F48CAEC1-009B-499C-8311-747FBB2224A6}.头文件|x64.ActiveCfg = 头文件|x64
+		{F48CAEC1-009B-499C-8311-747FBB2224A6}.头文件|x64.Build.0 = 头文件|x64
+		{F48CAEC1-009B-499C-8311-747FBB2224A6}.头文件|x86.ActiveCfg = 头文件|Win32
+		{F48CAEC1-009B-499C-8311-747FBB2224A6}.头文件|x86.Build.0 = 头文件|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
