@@ -2,116 +2,82 @@
 using namespace std;
 
 GameObject::GameObject(int x, int y, char type)
-{
-	this->x = x;
-	this->y = y;
-	this->type = type;
-}
+    : x(x), y(y), type(type) {}
 
-inline Player::Player(int x, int y, int hp, int gold,int attackPower)
-{
-	this->x = x;
-	this->y = y;
-	this->hp = hp;
-	this->gold = gold;
-	this->attackPower = attackPower;
-}
+Skill::Skill(const string& name, int dmg, int cd)
+    : name(name), dmg(dmg), cd(cd) {}
 
-void Player::move(int dx, int dy)
-{
-	x += dx;
-	y += dy;
-}
+Player::Player(int x, int y, int hp, int gold, int attackPower)
+    : GameObject(x, y, 'P'), hp(hp), gold(gold), attackPower(attackPower) {}
 
+void Player::move(int dx, int dy) {
+    x += dx;
+    y += dy;
+}
 void Player::addGold(int amount)
 {
-	 gold += amount; 
+    gold += amount; 
 }
-
-void Player::takeDamage(int dmg)
+void Player::takeDamage(int dmg) 
 {
-	hp -= dmg; if (hp < 0) hp = 0;
+    hp -= dmg; if (hp < 0) hp = 0;
 }
-
 void Player::heal(int amount)
 {
-	hp += amount;
+    hp += amount; 
 }
-// 玩家普攻实现（需放在Boss定义后）
-inline void Player::normalAttack(Boss& boss) {
-	if (boss.isAlive()) {
-		boss.takeDamage(attackPower);
-		cout << "玩家对Boss造成了" << attackPower << "点伤害！" << endl;
-	}
+void Player::normalAttack(Boss& boss)
+{
+    if (boss.isAlive()) {
+        boss.takeDamage(attackPower);
+        cout << "玩家对Boss造成了" << attackPower << "点伤害！" << endl;
+    }
+}
+void Player::addSkill(const Skill& skill)
+{ 
+    skills.push_back(skill); 
 }
 
-Boss::Boss(int x, int y, int hp, int attackPower, int goldDrop, bool defeated)
-{
-	this->x = x;
-	this->y = y;
-	this->hp = hp;
-	this->attackPower = attackPower;
-	this->goldDrop = goldDrop;
-	this->defeated = defeated;
-}
+Boss::Boss(int x, int y, int hp, int attackPower, int goldDrop, bool defeated, const vector<Skill>& skills)
+    : GameObject(x, y, 'B'), hp(hp), attackPower(attackPower), goldDrop(goldDrop), defeated(defeated), skills(skills) {}
 
 void Boss::takeDamage(int dmg)
 {
-	hp -= dmg;
-	if (hp <= 0) {
-		hp = 0;
-		defeated = true;
-	}
+    hp -= dmg;
+    if (hp <= 0) { hp = 0; defeated = true; }
 }
-
-bool Boss::isAlive() const
+bool Boss::isAlive() const 
 {
-	return !defeated;
+    return !defeated; 
 }
-
 void Boss::normalAttack(Player& player)
 {
-	if (isAlive()) {
-		player.takeDamage(attackPower);
-		cout << "Boss对玩家造成了" << attackPower << "点伤害！" << endl;
-	}
-
+    if (isAlive()) {
+        player.takeDamage(attackPower);
+        cout << "Boss对玩家造成了" << attackPower << "点伤害！" << endl;
+    }
 }
 
 Gold::Gold(int x, int y, int value, bool collected)
-{
-	this->x = x;
-	this->y = y;
-	this->value = value;
-	this->collected = collected;
-}
+    : GameObject(x, y, 'G'), value(value), collected(collected) {}
 
-void Gold::collect()
+void Gold::collect() 
 {
-	collected = true;
+    collected = true;
 }
 
 Track::Track(int x, int y, int damage, bool triggered)
-{
-	this->x = x;
-	this->y = y;
-	this->damage = damage;
-	this->triggered = triggered;
-}
+    : GameObject(x, y, 'T'), damage(damage), triggered(triggered) {}
 
 void Track::trigger()
-{
-	triggered = true;
+{ 
+    triggered = true;
 }
 
 Locker::Locker(int x, int y, bool locked)
-{
-	this->x = x;
-	this->y = y;
-	this->locked = locked;
-}
+    : GameObject(x, y, 'L'), locked(locked) {}
 
 bool Locker::isOpen() const
-{
-	return !locked;
+{ 
+    return !locked;
 }
