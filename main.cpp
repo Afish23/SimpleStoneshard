@@ -27,6 +27,10 @@ int main() {
 
     // 生成迷宫
     pair<int, int> startPos, exitPos;
+    cout << "请输入初始点坐标（x y形式）：";
+    cin >> startPos.first >> startPos.second;
+    cout << "请输入终止点坐标（x y形式）：";
+	cin >> exitPos.first >> exitPos.second;
     auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
 
     // 打印迷宫
