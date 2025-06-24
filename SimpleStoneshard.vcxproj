@@ -140,6 +140,7 @@
     <ClInclude Include="BossFightStrategy.h" />
     <ClInclude Include="GameObjects.h" />
     <ClInclude Include="GreedyResourcePicker.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="MazeGenerator.h" />
     <ClInclude Include="PuzzleSolver.h" />
     <ClInclude Include="ResourcePathPlanner.h" />
