@@ -1,137 +1,82 @@
 #include "BossFightStrategy.h"
 #include <queue>
-#include <map>
+#include <set>
 #include <climits>
 #include <algorithm>
 #include <tuple>
 
 using namespace std;
-// 估算剩余回合数：BOSS血量/最大技能伤害（向上取整）
-static int estimate_rounds(int boss_hp, const vector<Skill>& skills) {
-    int max_dmg = 0;
-    for (const auto& s : skills) max_dmg = max(max_dmg, s.dmg);
-    if (max_dmg == 0) return INT_MAX;
-    return (boss_hp + max_dmg - 1) / max_dmg;
+
+// 估算剩余回合：当前boss血量/最大技能伤害
+static int estimate_rounds(int bossHp, const vector<Skill>& skills) {
+    int maxdmg = 0;
+    for (const auto& s : skills) maxdmg = max(maxdmg, s.dmg);
+    if (maxdmg == 0) return INT_MAX;
+    return (bossHp + maxdmg - 1) / maxdmg;
 }
 
-// priority_queue 按照 f 从小到大排序（小的优先）
 struct Node {
     State state;
-    int f; // 估价函数
+    int f; // 估价
     bool operator<(const Node& rhs) const { return f > rhs.f; }
 };
 
-vector<string> BossFightStrategy::findMinTurnSkillSequence(
-    int player_res,
-    int boss_hp,
-    const vector<Skill>& skills,
-    int limit_round
+pair<int, vector<string>> BossFightStrategy::minTurnSkillSequence(
+    const vector<int>& bossHps,
+    const vector<Skill>& skills
 ) {
-    int n = skills.size();
+    int bossCount = bossHps.size(), skillCount = skills.size();
     priority_queue<Node> pq;
-    map<State, int> visited;
-    vector<string> best_seq;
+    set<State> visited;
     int best = INT_MAX;
-
-    State start{ boss_hp, player_res, 0, vector<int>(n, 0), {} };
-    pq.push({ start, estimate_rounds(boss_hp, skills) });
-
+    vector<string> bestSeq;
+    // 初始状态
+    State start{ 0, bossHps[0], 0, vector<int>(skillCount, 0), {} };
+    pq.push({ start, estimate_rounds(start.bossHp, skills) });
     while (!pq.empty()) {
         Node node = pq.top(); pq.pop();
-        State& s = node.state;
-
-        if (s.boss_hp <= 0) {
-            if (s.round < best) {
-                best = s.round;
-                best_seq = s.action_seq;
+        State s = node.state;
+        // 终止（所有boss打完）
+        if (s.bossIdx == bossCount) {
+            if (s.turn < best) {
+                best = s.turn;
+                bestSeq = s.actions;
             }
             continue;
         }
-        if (s.round >= limit_round)
-            continue;
-        if (visited.count(s) && visited[s] <= s.round)
-            continue;
-        visited[s] = s.round;
+        // 去重
+        if (visited.count(s)) continue;
+        visited.insert(s);
 
-        int est = s.round + estimate_rounds(s.boss_hp, skills);
+        // 剪枝
+        int est = s.turn + estimate_rounds(s.bossHp, skills) + (bossCount - s.bossIdx - 1);
         if (est >= best) continue;
 
-        for (int i = 0; i < n; ++i) {
+        // 尝试所有技能
+        for (int i = 0; i < skillCount; ++i) {
             if (s.cooldowns[i] == 0) {
                 State ns = s;
-                ns.boss_hp -= skills[i].dmg;
-                ns.round += 1;
-                for (int& cd : ns.cooldowns)
-                    if (cd > 0) cd--;
+                int dmg = skills[i].dmg;
+                // “不溢出”原则
+                if (dmg > ns.bossHp) dmg = ns.bossHp;
+                ns.bossHp -= dmg;
+                ns.turn += 1;
+                // 冷却推进
+                for (int& cd : ns.cooldowns) if (cd > 0) cd--;
                 ns.cooldowns[i] = skills[i].maxCd;
-                ns.action_seq.push_back(skills[i].name);
-                int nf = ns.round + estimate_rounds(max(0, ns.boss_hp), skills);
+                ns.actions.push_back("Boss" + to_string(ns.bossIdx + 1) + "-" + to_string(ns.turn) + "-" + to_string(i + 1));
+                // Boss被击败，进入下一个
+                if (ns.bossHp == 0) {
+                    ns.bossIdx += 1;
+                    if (ns.bossIdx < bossCount)
+                        ns.bossHp = bossHps[ns.bossIdx];
+                    else
+                        ns.bossHp = 0; // 结束
+                }
+                int nf = ns.turn + (ns.bossHp ? estimate_rounds(ns.bossHp, skills) : 0) + (bossCount - ns.bossIdx - 1);
                 pq.push({ ns, nf });
             }
         }
     }
-    return best_seq;
-}
-
-void fightBoss(Player& player, Boss& boss) {
-    int turn = 1;
-    cout << "===== BOSS 战开始！=====" << endl;
-    while (player.hp > 0 && boss.isAlive()) {
-        cout << "\n--- 回合 " << turn << " ---" << endl;
-        cout << "玩家 HP: " << player.hp << "  Gold: " << player.gold << endl;
-        cout << "BOSS HP: " << boss.hp << endl;
-        for (int i = 0; i < (int)player.skills.size(); i++)
-        {
-            if (player.skills[i].curCd != 0) { player.skills[i].curCd--; }
-        }
-        // 显示玩家技能列表
-        cout << "技能列表：" << endl;
-        for (size_t i = 0; i < player.skills.size(); ++i) {
-            cout << i + 1 << ". " << player.skills[i].name
-                << " (伤害: " << player.skills[i].dmg
-                << ", 当前冷却: " << player.skills[i].curCd << ", 最大冷却:"<< player.skills[i].maxCd<<")" << endl;
-        }
-        cout << "0. 普通攻击" << endl;
-
-        // 玩家选择技能
-        int choice = -1;
-        do {
-            cout << "选择技能编号进行攻击(0为普通攻击): ";
-            cin >> choice;
-            if(choice!=0&&player.skills[choice-1].curCd !=0)
-            {
-                cout << "技能正在冷却，无法使用！" << endl;
-                choice = -1;
-            }
-            
-        } while (choice < 0 || choice >(int)player.skills.size());
-
-        if (choice == 0) {
-            player.normalAttack(boss);
-        }
-        else {
-            boss.takeDamage(player.skills[choice - 1].dmg);
-            player.skills[choice-1].curCd = player.skills[choice-1].maxCd+1;
-            cout << "玩家使用[" << player.skills[choice - 1].name << "]对Boss造成"
-                << player.skills[choice - 1].dmg << "点伤害！" << endl;
-        }
-
-        // 检查BOSS是否被击败
-        if (!boss.isAlive()) {
-            cout << "\n恭喜！你击败了BOSS！获得金币：" << boss.goldDrop << endl;
-            player.addGold(boss.goldDrop);
-            break;
-        }
-
-        // Boss回合
-        boss.normalAttack(player);
-
-        // 检查玩家是否死亡
-        if (player.hp <= 0) {
-            cout << "\n你被BOSS击败了！游戏结束。" << endl;
-            break;
-        }
-        ++turn;
-    }
-    cout << "===== 战斗结束 =====" << endl;
+    return { best, bestSeq };
 }

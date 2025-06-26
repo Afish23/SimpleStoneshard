@@ -4,6 +4,7 @@
 #include "MazeGenerator.h"
 #include "PuzzleSolver.h"
 #include "ResourcePathPlanner.h"
+#include "FightBossVisual.h"
 #include "Utils.h"
 using namespace std;
 
@@ -32,12 +33,25 @@ int main() {
     //// 打印迷宫
     //cout << "\n生成的迷宫如下：\n";
     //MazeGenerator::printMaze(maze);
-    Player play;
-    Boss boss;
-    Skill a("ltbyz", 50, 3,0);
-    vector <Skill> b{ {"lanyue",50,2,0},{"huche",70,3,0}};
-    play.addSkill(a);
-    boss.addBossSkills(b);
-    fightBoss(play, boss);
-    return 0;
+    // 定义Boss血量
+    vector<int> bossHps = { 40,60, 80 };
+
+    // 定义技能（伤害, 最大冷却）
+    vector<Skill> skills;
+    skills.push_back(Skill(15, 2)); // 技能1：伤害15，冷却2
+    skills.push_back(Skill(10, 0)); // 技能2：伤害10，冷却0
+    skills.push_back(Skill(25, 3)); // 技能3：伤害25，冷却3
+
+    // 计算最优技能释放顺序
+    BossFightStrategy bfs;
+    auto result = bfs.minTurnSkillSequence(bossHps, skills);
+
+    // 打印最优回合数和顺序到控制台（可选）
+    printf("最小回合数: %d\n", result.first);
+    for (const auto& step : result.second) {
+        printf("%s\n", step.c_str());
+    }
+
+    // 自动可视化播放整个战斗流程
+    fightBossVisualAuto(bossHps, skills, result.second);
 }

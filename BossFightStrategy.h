@@ -1,32 +1,30 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <tuple>
+#include<tuple>
 #include "GameObjects.h"
-
 using namespace std;
-//分支限界算法的“节点”或“状态”结构体。
+
+// 状态节点
 struct State {
-    int boss_hp;
-    int player_res;
-    int round;
-    vector<int> cooldowns;
-    vector<string> action_seq;
+    int bossIdx;                 // 当前BOSS编号
+    int bossHp;                  // 当前BOSS剩余血量
+    int turn;                    // 总用回合数
+    vector<int> cooldowns;       // 技能冷却
+    vector<string> actions;      // 技能序列
 
     bool operator<(const State& rhs) const {
-        return tie(boss_hp, player_res, cooldowns) < tie(rhs.boss_hp, rhs.player_res, rhs.cooldowns);
+        // 用于set/map判重
+        return tie(bossIdx, bossHp, cooldowns) < tie(rhs.bossIdx, rhs.bossHp, rhs.cooldowns);
     }
 };
-//封装“BOSS战最优解搜索”功能
+
 class BossFightStrategy {
 public:
-    static vector<string> findMinTurnSkillSequence(
-        int player_res,
-        int boss_hp,
-        const vector<Skill>& skills,
-        int limit_round = 100
+    // 输入：Boss血量列表、玩家技能
+    // 输出：最小回合数下的技能释放序列
+    static pair<int, vector<string>> minTurnSkillSequence(
+        const vector<int>& bossHps,
+        const vector<Skill>& skills
     );
 };
-
-//战斗主循环
-void fightBoss(Player& player, Boss& boss);
