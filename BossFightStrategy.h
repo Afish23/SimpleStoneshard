@@ -1,4 +1,4 @@
-#pragma once
-//BOSSÕ½²ßÂÔÓÅ»¯Ä£¿é
+ï»¿#pragma once
+//BOSSæˆ˜ç­–ç•¥ä¼˜åŒ–æ¨¡å—
 #include<iostream>
 using namespace std;

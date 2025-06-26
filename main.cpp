@@ -1,77 +1,178 @@
-#include "BossFightStrategy.h"
+ï»¿#include "BossFightStrategy.h"
 #include "GameObjects.h"
 #include "GreedyResourcePicker.h"
 #include "MazeGenerator.h"
 #include "PuzzleSolver.h"
 #include "ResourcePathPlanner.h"
+#include"FightBossVisual.h"
 #include "Utils.h"
+#include <iostream>
+#include <fstream>
+#include <memory>
+#include <vector>
 using namespace std;
+
+// å‡è®¾æ­£ç¡®å¯†ç 
+vector<int> target = { 7, 5, 2 };
+// æ ¹æ®æ­£ç¡®å¯†ç ç»™å‡ºçº¿ç´¢
+vector<vector<int>> clues = {
+    {-1, -1},        // æ¯ä½ç´ æ•°ä¸”ä¸é‡å¤
+    {3, 0},          // ç¬¬äºŒä½å¶æ•°
+    {-1, 5, 2}      // ç¬¬ä¸‰ä½æ˜¯8
+};
 
 int main() {
     srand(time(0));
+    int choice = 0;
+    cout << "æ¬¢è¿ä½¿ç”¨è¿·å®«ç³»ç»Ÿ\n";
+    cout << "1. éšæœºç”Ÿæˆè¿·å®«\n";
+    cout << "2. è¯»å–æ–‡ä»¶å¹¶å¼€å§‹æ¸¸æˆ\n";
+    cout << "è¯·é€‰æ‹©åŠŸèƒ½ï¼ˆè¾“å…¥æ•°å­—1æˆ–2ï¼‰ï¼š";
+    cin >> choice;
 
-    int n;
-    cout << "ÊäÈëÃÔ¹¬³ß´ç (n¡Án, ×îĞ¡7): ";
-    cin >> n;
+    if (choice == 1) {
+        int n;
+        cout << "è¾“å…¥è¿·å®«å°ºå¯¸ (nÃ—n, æœ€å°7): ";
+        cin >> n;
+    
+        if (n < 7) {
+            cout << "å°ºå¯¸ä¸èƒ½å°äº7\n";
+            return 1;
+        }
 
-    if (n < 7) {
-        cout << "³ß´ç²»ÄÜĞ¡ÓÚ7\n";
-        return 1;
+        int goldCount = max(1, n / 4);
+        int trapCount = max(1, n / 5);
+        int lockerCount = max(1, n / 6);
+        int bossCount = 1;
+
+        pair<int, int> startPos, exitPos;
+        cout << "è¯·è¾“å…¥åˆå§‹ç‚¹åæ ‡ï¼ˆx yå½¢å¼ï¼Œå¤§äº0ï¼Œå°äºn - 1ï¼‰ï¼š";
+        cin >> startPos.first >> startPos.second;
+        cout << "è¯·è¾“å…¥ç»ˆæ­¢ç‚¹åæ ‡ï¼ˆx yå½¢å¼ï¼Œå¤§äº0ï¼Œå°äºn - 1ï¼‰ï¼š";
+        cin >> exitPos.first >> exitPos.second;
+
+        auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
+
+        cout << "\nç”Ÿæˆçš„è¿·å®«å¦‚ä¸‹ï¼š\n";
+        MazeGenerator::printMaze(maze);
+
+        // å†™å…¥jsonæ–‡ä»¶
+        MazeGenerator::writeMazeToJson(maze, "maze.json");
+        cout << "å·²ä¿å­˜åˆ° maze.json\n";
+    //srand(time(0));
+    }
+    else if (choice == 2) {
+        pair<int, int> startPos, exitPos;//èµ·æ­¢ç‚¹åæ ‡å¯¹
+        // è¯»å–jsonå¹¶å®ä¾‹åŒ–å¯¹è±¡
+        ifstream fin("maze.json");
+        if (!fin) {
+            cerr << "æ— æ³•æ‰“å¼€maze.jsonæ–‡ä»¶" << endl;
+            return 1;
+        }
+        json j;
+        fin >> j;
+
+        auto maze_arr = j["maze"];
+        int nn = maze_arr.size();
+        int m = maze_arr[0].size();
+        int start_x, start_y, end_x, end_y;
+
+        vector<vector<MazeCell>> maze_objs(nn, vector<MazeCell>(m));
+        // å¡«å……è¿·å®«æ•°æ®
+        for (int i = 0; i < nn; ++i) {
+            for (int j2 = 0; j2 < m; ++j2) {
+                char c = maze_arr[i][j2].get<string>()[0];
+                maze_objs[i][j2].type = c;  // ç›´æ¥è®¾ç½®å•å…ƒæ ¼ç±»å‹
+                switch (c) {
+                case 'S':  // èµ·ç‚¹
+                    start_x = i;
+                    start_y = j2;
+                    break;
+
+                case 'E':  // ç»ˆç‚¹
+                    end_x = i;
+                    end_y = j2;
+                    break;
+
+                default:   // å…¶ä»–æƒ…å†µæ— éœ€æ“ä½œ
+                    break;
+                }
+            }
+        }
+
+        // è¾“å‡ºå¯è§†åŒ–
+        cout << "è¯»å–åˆ°çš„è¿·å®«å¦‚ä¸‹ï¼š\n";
+        for (int i = 0; i < nn; ++i) {
+            for (int j2 = 0; j2 < m; ++j2) {
+                cout << maze_objs[i][j2].type << ' ';  // ç›´æ¥è®¿é—®å•å…ƒæ ¼ç±»å‹
+            }
+            cout << endl;
+        }
+        /*cout << start_x << ',' << start_y << endl;
+        cout << end_x << ',' << end_y << endl;
+        cout << goldCount << endl;
+        cout << trapCount << endl;
+        cout << lockerCount << endl;*/
+
+        startPos.first = start_x;
+        startPos.second = start_y;
+        exitPos.first = end_x;
+        exitPos.second = end_y;
+
+        auto result = ResourcePathPlanner::findOptimalPath(maze_objs, startPos, exitPos);
+
+        if (result.success) {
+            cout << "\næ‰¾åˆ°æœ€ä¼˜è·¯å¾„ï¼æ€»ä»·å€¼: " << result.totalValue << endl;
+
+            // å¯è§†åŒ–æ˜¾ç¤º
+            auto markedMaze = ResourcePathPlanner::markPath(maze_objs, result.path);
+            cout << "\nè·¯å¾„æ ‡è®°å›¾ (* è¡¨ç¤ºè·¯å¾„):\n";
+            MazeGenerator::printMaze(markedMaze);
+
+            // è¾“å‡ºè·¯å¾„åæ ‡
+            cout << "\nè·¯å¾„ç‚¹åºåˆ—:\n";
+            for (auto& p : result.path) {
+                cout << "(" << p.first << "," << p.second << ") ";
+            }
+            cout << endl;
+          //è¯»å–æ–‡ä»¶æˆåŠŸï¼ŒæˆåŠŸç”Ÿæˆæœ€ä¼˜è·¯å¾„åå¼€å§‹æ¸¸æˆ
+          // è¯»å–JSONæ–‡ä»¶
+    ifstream ifs("boss_case.json");
+    nlohmann::json j;
+    ifs >> j;
+
+    // è§£æBossè¡€é‡
+    vector<int> bossHps = j["B"].get<vector<int>>();
+
+    // è§£ææŠ€èƒ½
+    std::vector<Skill> skills;
+    for (const auto& arr : j["PlayerSkills"]) {
+        int damage = arr[0];
+        int cooldown = arr[1];
+        skills.emplace_back(damage, cooldown);
+
     }
 
-    // ÅäÖÃ¸÷ÖÖÔªËØÊıÁ¿
-    int goldCount = max(1, n / 4);
-    int trapCount = max(1, n / 5);
-    int lockerCount = max(1, n / 6);
-    int bossCount = 1;
+    // è®¡ç®—æœ€ä¼˜æŠ€èƒ½é‡Šæ”¾é¡ºåº
+    BossFightStrategy bfs;
+    auto result = bfs.minTurnSkillSequence(bossHps, skills);
 
-    // Éú³ÉÃÔ¹¬
-    pair<int, int> startPos, exitPos;
-    cout << "ÇëÊäÈë³õÊ¼µã×ø±ê£¨x yĞÎÊ½£¬´óÓÚ0£¬Ğ¡ÓÚn - 1£©£º";
-    cin >> startPos.first >> startPos.second;
-    cout << "ÇëÊäÈëÖÕÖ¹µã×ø±ê£¨x yĞÎÊ½£¬´óÓÚ0£¬Ğ¡ÓÚn - 1£©£º";
-	cin >> exitPos.first >> exitPos.second;
-    auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
+    // æ‰“å°æœ€ä¼˜å›åˆæ•°å’Œé¡ºåºåˆ°æ§åˆ¶å°ï¼ˆå¯é€‰ï¼‰
+    //printf("min_turns: %d\n", result.first);
+    //for (const auto& step : result.second) {
+        //printf("%s\n", step.c_str());
+    //}
+    // è‡ªåŠ¨å¯è§†åŒ–æ’­æ”¾æ•´ä¸ªæˆ˜æ–—æµç¨‹
+    fightBossVisualAuto(bossHps, skills, result.second);
+          
 
-    // ´òÓ¡ÃÔ¹¬
-    cout << "\nÉú³ÉµÄÃÔ¹¬ÈçÏÂ£º\n";
-    MazeGenerator::printMaze(maze);
-
-    // 1. ¶ÁÈ¡JSONÎÄ¼ş      Ğè½øĞĞ²ğ·Ö£¬µ±Ç°Ë¼Â·£¬×öÖ÷½çÃæ£¬·Ö³ÉÁ½¸ö¹¦ÄÜ£¬1£¬Ëæ»úÉú³ÉÃÔ¹¬£»2.¶ÁÈ¡ÎÄ¼ş²¢¿ªÊ¼ÓÎÏ·
-    ifstream fin("maze.json");
-    if (!fin) {
-        cerr << "ÎŞ·¨´ò¿ªmaze.jsonÎÄ¼ş" << endl;
-        return 1;
-    }
-    json j;
-    fin >> j;
-
-    // 2. »ñÈ¡ÃÔ¹¬Êı×é
-    auto maze_arr = j["maze"];
-    int nn = maze_arr.size();
-    int m = maze_arr[0].size();
-
-    // 3. ³õÊ¼»¯¶şÎ¬ÖÇÄÜÖ¸ÕëÊı×é
-    vector<vector<shared_ptr<GameObject>>> maze_objs(nn, vector<shared_ptr<GameObject>>(m, nullptr));
-
-    // 4. ¸ù¾İ×Ö·ûÊµÀı»¯¶ÔÏó
-    for (int i = 0; i < nn; ++i) {
-        for (int j2 = 0; j2 < m; ++j2) {
-            char c = maze_arr[i][j2].get<string>()[0];
-            maze_objs[i][j2] = MazeGenerator::createObject(c, i, j2);
+        }
+        else {
+            cout << "\næœªæ‰¾åˆ°æœ‰æ•ˆè·¯å¾„ï¼" << endl;
         }
     }
-
-    // 5. Êä³ö²âÊÔ
-   /* for (int i = 0; i < nn; ++i) {
-        for (int j2 = 0; j2 < m; ++j2) {
-            if (maze_objs[i][j2])
-                cout << maze_objs[i][j2]->type << ' ';
-            else
-                cout << "? ";
-        }
-        cout << endl;
-    }*/
-
-    return 0;
-}
+    else {
+                cout << "æ— æ•ˆè¾“å…¥ï¼Œç¨‹åºé€€å‡ºã€‚\n";
+    }
+        return 0; 
+    }

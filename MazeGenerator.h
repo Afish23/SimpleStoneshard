@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <vector>
 #include <queue>
 #include <utility>
@@ -12,7 +12,7 @@
 #include"GameObjects.h"
 using namespace std;
 using json = nlohmann::json;
-// ¶¨ÒåÃÔ¹¬µ¥Ôª¸ñÀàĞÍ
+// å®šä¹‰è¿·å®«å•å…ƒæ ¼ç±»å‹
 const char WALL = '#';
 const char PATH = ' ';
 const char START = 'S';
@@ -24,12 +24,12 @@ const char BOSS = 'B';
 
 struct MazeCell {
     char type;
-    MazeCell() : type(PATH) {}  // ¹¹Ôìº¯ÊıÄ¬ÈÏ³õÊ¼»¯ÎªÍ¨Â·
+    MazeCell() : type(PATH) {}  // æ„é€ å‡½æ•°é»˜è®¤åˆå§‹åŒ–ä¸ºé€šè·¯
 };
 
 class MazeGenerator {
 public:
-    // Éú³ÉÃÔ¹¬Ö÷º¯Êı
+    // ç”Ÿæˆè¿·å®«ä¸»å‡½æ•°
     static vector<vector<MazeCell>> generateMaze(int size,
         int goldCount,
         int trapCount,
@@ -38,26 +38,26 @@ public:
         pair<int, int>& startPos,
         pair<int, int>& exitPos);
 
-    // ´òÓ¡ÃÔ¹¬
+    // æ‰“å°è¿·å®«
     static void printMaze(const vector<vector<MazeCell>>& maze);
-    // ·ÖÖÎ·¨Éú³ÉÃÔ¹¬
+    // åˆ†æ²»æ³•ç”Ÿæˆè¿·å®«
     static void divide(vector<vector<MazeCell>>& maze, int x1, int y1, int x2, int y2);
 
-    // ¼ì²éÁ¬Í¨ĞÔ
+    // æ£€æŸ¥è¿é€šæ€§
     static bool isConnected(const vector<vector<MazeCell>>& maze,
         pair<int, int> start,
         pair<int, int> exit);
 
-    // »ñÈ¡ËùÓĞÍ¨Â·
+    // è·å–æ‰€æœ‰é€šè·¯
     static vector<pair<int, int>> getAllPaths(const vector<vector<MazeCell>>& maze);
 
-    // Ëæ»ú·ÅÖÃÔªËØ
+    // éšæœºæ”¾ç½®å…ƒç´ 
     static void placeRandomElements(vector<vector<MazeCell>>& maze,
         char elem,
         int count,
         const set<pair<int, int>>& forbidden);
 
-    //Ğ´ÈëjsonÎÄ¼ş
+    //å†™å…¥jsonæ–‡ä»¶
     static void writeMazeToJson(const vector<vector<MazeCell>>& maze, const string& filename);
-    static shared_ptr<GameObject> createObject(char c, int x, int y);
+    /*static shared_ptr<GameObject> createObject(char c, int x, int y);*/
 };

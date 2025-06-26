@@ -1,5 +1,7 @@
-#pragma once
+﻿#pragma once
 #include <iostream>
+#include <set>
+#include <utility>
 #include <string>
 #include <vector>
 using namespace std;
@@ -10,43 +12,42 @@ public:
     char type;
     GameObject(int x = 0, int y = 0, char type = '#');
     virtual ~GameObject() {}
+    /*pair<int, int> getPosition() const {
+        return { x, y };
+    }*/
 };
 
 class Skill {
 public:
-    string name;
     int dmg;
-    int cd;
-    Skill(const string& name = "", int dmg = 0, int cd = 0);
+    int maxCd;
+    int curCd;
+    Skill(int dmg = 0, int maxCd = 0);
 };
 
 class Player : public GameObject {
 public:
-    int hp;
-    int gold;
-    int attackPower;
     vector<Skill> skills;
-    Player(int x = 0, int y = 0, int hp = 100, int gold = 0, int attackPower = 20);
+    Player(int x = 0, int y = 0);
     void move(int dx, int dy);
     void addGold(int amount);
     void takeDamage(int dmg);
     void heal(int amount);
+    // Íæ¼ÒÆÕ¹¥¼¼ÄÜ
     void normalAttack(class Boss& boss);
+    void getPosition();
     void addSkill(const Skill& skill);
 };
 
-class Boss : public GameObject {
+class Boss {
 public:
     int hp;
-    int attackPower;
     int goldDrop;
     bool defeated;
-    vector<Skill> skills;
-    // ֻ��������ʵ��
-    Boss(int x = 0, int y = 0, int hp = 200, int attackPower = 30, int goldDrop = 50, bool defeated = false, const vector<Skill>& skills = {});
+    // Ö»ÉùÃ÷£¬²»ÊµÏÖ
+    Boss(int hp = 200);
     void takeDamage(int dmg);
     bool isAlive() const;
-    void normalAttack(Player& player);
 };
 
 class Gold : public GameObject {

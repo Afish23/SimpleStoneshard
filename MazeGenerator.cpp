@@ -1,4 +1,4 @@
-#include "MazeGenerator.h"
+ï»¿#include "MazeGenerator.h"
 
 using json = nlohmann::json;
 vector<vector<MazeCell>> MazeGenerator::generateMaze(int size,
@@ -13,16 +13,16 @@ vector<vector<MazeCell>> MazeGenerator::generateMaze(int size,
     while (true) {
         maze.assign(size, vector<MazeCell>(size, MazeCell()));
 
-        // ÉèÖÃÍâÎ§Ç½
+        // è®¾ç½®å¤–å›´å¢™
         for (int i = 0; i < size; i++) {
             maze[0][i].type = maze[size - 1][i].type =
                 maze[i][0].type = maze[i][size - 1].type = WALL;
         }
 
-        // ·ÖÖÎÉú³ÉÃÔ¹¬
+        // åˆ†æ²»ç”Ÿæˆè¿·å®«
         divide(maze, 1, 1, size - 2, size - 2);
 
-        // Ëæ»úÑ¡ÔñÆğµãºÍÖÕµã
+        // éšæœºé€‰æ‹©èµ·ç‚¹å’Œç»ˆç‚¹
         auto paths = getAllPaths(maze);
         if (paths.size() < 2) continue;
 
@@ -35,7 +35,7 @@ vector<vector<MazeCell>> MazeGenerator::generateMaze(int size,
         if (isConnected(maze, startPos, exitPos)) break;
     }
 
-    // ·ÅÖÃ¸÷ÖÖÔªËØ
+    // æ”¾ç½®å„ç§å…ƒç´ 
     set<pair<int, int>> forbidden = { startPos, exitPos };
     placeRandomElements(maze, GOLD, goldCount, forbidden);
     placeRandomElements(maze, TRAP, trapCount, forbidden);
@@ -146,18 +146,18 @@ void MazeGenerator::printMaze(const vector<vector<MazeCell>>& maze) {
     MazeGenerator::writeMazeToJson(maze, "maze.json");
 }
 
-// ¹¤³§º¯Êı£¬¸ù¾İ×Ö·ûÉú³É¶ÔÏó
-shared_ptr<GameObject> MazeGenerator::createObject(char c, int x, int y) {
-    switch (c) {
-    case '#': return make_shared<GameObject>(x, y, '#'); // Ç½
-    case 'S': return make_shared<Player>(x, y, 100, 0, 20); // Íæ¼Ò
-    case 'E': return make_shared<GameObject>(x, y, 'E'); // ³ö¿Ú£¨Äã¿ÉÒÔĞÂ½¨ Exit Àà£©
-    case ' ': return make_shared<GameObject>(x, y, ' '); // Í¨µÀ
-    case 'B': return make_shared<Boss>(x, y, 200, 30, 50, false, vector<Skill>());  // Boss
-    case 'G': return make_shared<Gold>(x, y);         // ½ğ±Ò
-    case 'T': return make_shared<Track>(x, y);        // ÏİÚå
-    case 'L': return make_shared<Locker>(x, y);       // ±¦Ïä
-    default:  return nullptr;
-    }
-}
+// å·¥å‚å‡½æ•°ï¼Œæ ¹æ®å­—ç¬¦ç”Ÿæˆå¯¹è±¡
+//shared_ptr<GameObject> MazeGenerator::createObject(char c, int x, int y) {
+//    switch (c) {
+//    case '#': return make_shared<GameObject>(x, y, '#'); // å¢™
+//    case 'S': return make_shared<Player>(x, y); // ç©å®¶
+//    case 'E': return make_shared<GameObject>(x, y, 'E'); // å‡ºå£ï¼ˆä½ å¯ä»¥æ–°å»º Exit ç±»ï¼‰
+//    case ' ': return make_shared<GameObject>(x, y, ' '); // é€šé“
+//    case 'B': return make_shared<GameObject>(x, y, 'B');  // Boss
+//    case 'G': return make_shared<Gold>(x, y);         // é‡‘å¸
+//    case 'T': return make_shared<Track>(x, y);        // é™·é˜±
+//    case 'L': return make_shared<Locker>(x, y);       // å®ç®±
+//    default:  return nullptr;
+//    }
+//}
 
