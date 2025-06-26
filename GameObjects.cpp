@@ -4,8 +4,8 @@ using namespace std;
 GameObject::GameObject(int x, int y, char type)
     : x(x), y(y), type(type) {}
 
-Skill::Skill(const string& name, int dmg, int cd)
-    : name(name), dmg(dmg), cd(cd) {}
+Skill::Skill(const string& name, int dmg, int maxCd,int curCd)
+    : name(name), dmg(dmg), maxCd(maxCd),curCd(curCd) {}
 
 Player::Player(int x, int y, int hp, int gold, int attackPower)
     : GameObject(x, y, 'P'), hp(hp), gold(gold), attackPower(attackPower) {}
@@ -56,6 +56,11 @@ void Boss::normalAttack(Player& player)
         player.takeDamage(attackPower);
         cout << "Boss对玩家造成了" << attackPower << "点伤害！" << endl;
     }
+}
+
+void Boss::addBossSkills(const vector <Skill>& skill)
+{
+    skills.insert(skills.end(), skill.begin(), skill.end());
 }
 
 Gold::Gold(int x, int y, int value, bool collected)

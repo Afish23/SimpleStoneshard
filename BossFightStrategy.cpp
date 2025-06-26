@@ -63,7 +63,7 @@ vector<string> BossFightStrategy::findMinTurnSkillSequence(
                 ns.round += 1;
                 for (int& cd : ns.cooldowns)
                     if (cd > 0) cd--;
-                ns.cooldowns[i] = skills[i].cd;
+                ns.cooldowns[i] = skills[i].maxCd;
                 ns.action_seq.push_back(skills[i].name);
                 int nf = ns.round + estimate_rounds(max(0, ns.boss_hp), skills);
                 pq.push({ ns, nf });
@@ -80,13 +80,16 @@ void fightBoss(Player& player, Boss& boss) {
         cout << "\n--- 回合 " << turn << " ---" << endl;
         cout << "玩家 HP: " << player.hp << "  Gold: " << player.gold << endl;
         cout << "BOSS HP: " << boss.hp << endl;
-
+        for (int i = 0; i < (int)player.skills.size(); i++)
+        {
+            if (player.skills[i].curCd != 0) { player.skills[i].curCd--; }
+        }
         // 显示玩家技能列表
-        cout << "可用技能：" << endl;
+        cout << "技能列表：" << endl;
         for (size_t i = 0; i < player.skills.size(); ++i) {
             cout << i + 1 << ". " << player.skills[i].name
                 << " (伤害: " << player.skills[i].dmg
-                << ", 冷却: " << player.skills[i].cd << ")" << endl;
+                << ", 当前冷却: " << player.skills[i].curCd << ", 最大冷却:"<< player.skills[i].maxCd<<")" << endl;
         }
         cout << "0. 普通攻击" << endl;
 
@@ -95,6 +98,12 @@ void fightBoss(Player& player, Boss& boss) {
         do {
             cout << "选择技能编号进行攻击(0为普通攻击): ";
             cin >> choice;
+            if(choice!=0&&player.skills[choice-1].curCd !=0)
+            {
+                cout << "技能正在冷却，无法使用！" << endl;
+                choice = -1;
+            }
+            
         } while (choice < 0 || choice >(int)player.skills.size());
 
         if (choice == 0) {
@@ -102,6 +111,7 @@ void fightBoss(Player& player, Boss& boss) {
         }
         else {
             boss.takeDamage(player.skills[choice - 1].dmg);
+            player.skills[choice-1].curCd = player.skills[choice-1].maxCd+1;
             cout << "玩家使用[" << player.skills[choice - 1].name << "]对Boss造成"
                 << player.skills[choice - 1].dmg << "点伤害！" << endl;
         }

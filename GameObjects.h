@@ -16,8 +16,9 @@ class Skill {
 public:
     string name;
     int dmg;
-    int cd;
-    Skill(const string& name = "", int dmg = 0, int cd = 0);
+    int maxCd;
+    int curCd;
+    Skill(const string& name = "", int dmg = 0, int maxCd = 0,int curCd=0);
 };
 
 class Player : public GameObject {
@@ -47,6 +48,7 @@ public:
     void takeDamage(int dmg);
     bool isAlive() const;
     void normalAttack(Player& player);
+    void addBossSkills(const vector<Skill>&skill);
 };
 
 class Gold : public GameObject {
