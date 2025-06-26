@@ -34,14 +34,15 @@ int main() {
     //cout << "\n生成的迷宫如下：\n";
     //MazeGenerator::printMaze(maze);
     // 定义Boss血量
-    vector<int> bossHps = { 40,60, 80 };
+    vector<int> bossHps = { 19,17,14,19 };
 
     // 定义技能（伤害, 最大冷却）
     vector<Skill> skills;
-    skills.push_back(Skill(15, 2)); // 技能1：伤害15，冷却2
-    skills.push_back(Skill(10, 0)); // 技能2：伤害10，冷却0
-    skills.push_back(Skill(25, 3)); // 技能3：伤害25，冷却3
-
+    skills.push_back(Skill(6, 2)); 
+    skills.push_back(Skill(9, 5)); 
+    skills.push_back(Skill(5, 3));
+    skills.push_back(Skill(4, 3));
+    skills.push_back(Skill(2, 0));
     // 计算最优技能释放顺序
     BossFightStrategy bfs;
     auto result = bfs.minTurnSkillSequence(bossHps, skills);

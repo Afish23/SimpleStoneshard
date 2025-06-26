@@ -15,4 +15,8 @@ void drawBattleAuto(
     const std::vector<std::string>& actions,
     int currentActionIdx
 );
-void drawSkillSequence(int x, int y,const std::vector<std::string>& actions,int currentIdx);
+void drawSkillSequence(
+    int x, int y,
+    const std::vector<std::string>& actions,
+    int currentIdx
+);
