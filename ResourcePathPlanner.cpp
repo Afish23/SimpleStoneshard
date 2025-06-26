@@ -30,36 +30,30 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
     int n = maze.size();
     if (n == 0) return result;
 
-    // 1. 统计所有金币编号
-    std::vector<std::pair<int, int>> golds;
-    std::map<std::pair<int, int>, int> gold_id;
+    // 1. 统计所有金币和陷阱编号
+    std::map<std::pair<int, int>, int> special_id;
+    int spnum = 0;
     for (int i = 0; i < n; ++i)
         for (int j = 0; j < n; ++j)
-            if (maze[i][j].type == GOLD) {
-                int id = golds.size();
-                golds.push_back({ i,j });
-                gold_id[{i, j}] = id;
-            }
-    int gnum = golds.size();
-    if (gnum > 20) { // 太多金币不建议用此写法
-        std::cerr << "金币过多（" << gnum << "），不适合状态压缩写法！" << std::endl;
+            if (maze[i][j].type == GOLD || maze[i][j].type == TRAP)
+                special_id[{i, j}] = spnum++;
+    if (spnum > 20) {
+        std::cerr << "金币+陷阱过多（" << spnum << "），不适合状态压缩写法！" << std::endl;
         return result;
     }
 
-    // 2. DP: dp[x][y][mask]=最大价值
     struct State {
         int value, steps;
         std::pair<int, int> prev;
     };
     std::vector<std::vector<std::vector<State>>> dp(
-        n, std::vector<std::vector<State>>(n, std::vector<State>(1 << gnum, { -10000, INT_MAX, {-1,-1} })));
+        n, std::vector<std::vector<State>>(n, std::vector<State>(1 << spnum, { -10000, INT_MAX, {-1,-1} })));
     struct Node { int x, y, mask; };
     std::queue<Node> q;
 
     dp[start.first][start.second][0] = { 0, 0, {-1,-1} };
     q.push({ start.first, start.second, 0 });
 
-    int debug_step = 0;
     while (!q.empty()) {
         Node cur = q.front(); q.pop();
         int x = cur.x, y = cur.y, mask = cur.mask;
@@ -69,16 +63,16 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
             if (nx < 0 || nx >= n || ny < 0 || ny >= n) continue;
             if (maze[nx][ny].type == WALL) continue;
             int nmask = mask, add = 0;
-            // 如果是金币格且没吃过
-            if (maze[nx][ny].type == GOLD) {
-                int id = gold_id.at({ nx,ny });
+            auto it = special_id.find({ nx,ny });
+            if (it != special_id.end()) {
+                int id = it->second;
                 if (!(nmask & (1 << id))) {
                     nmask |= (1 << id);
-                    add += 5;
+                    if (maze[nx][ny].type == GOLD)
+                        add += 5;
+                    else if (maze[nx][ny].type == TRAP)
+                        add -= 3;
                 }
-            }
-            else if (maze[nx][ny].type == TRAP) {
-                add -= 3;
             }
             int nvalue = s.value + add;
             int nsteps = s.steps + 1;
@@ -90,28 +84,12 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
                 ref.prev = { x, y };
                 q.push({ nx, ny, nmask });
             }
-
-            //// ====== debug输出（仿你原来的格式，按当前nmask打印）======
-            //std::cout << "\n=== debug: step " << (debug_step++) << ", mask=" << nmask << " ===\n";
-            //for (int i = 0; i < n; ++i) {
-            //    for (int j = 0; j < n; ++j) {
-            //        if (maze[i][j].type == WALL)
-            //            std::cout << "#####\t";
-            //        else if (dp[i][j][nmask].value == -10000)
-            //            std::cout << "X\t";
-            //        else
-            //            std::cout << dp[i][j][nmask].value << "\t";
-            //    }
-            //    std::cout << "\n";
-            //}
-            //std::cout << std::endl;
-            //// ====== end debug ======
         }
     }
 
     // 3. 在终点所有mask中找最大价值最短路径
     int bestValue = -10000, bestSteps = INT_MAX, bestMask = -1;
-    for (int mask = 0; mask < (1 << gnum); ++mask) {
+    for (int mask = 0; mask < (1 << spnum); ++mask) {
         State& s = dp[exit.first][exit.second][mask];
         if (s.value > bestValue ||
             (s.value == bestValue && s.steps < bestSteps)) {
@@ -131,9 +109,10 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
     while (!(x == start.first && y == start.second)) {
         path.push_back({ x, y });
         auto prev = dp[x][y][mask].prev;
-        // 如果当前格子是金币，mask回退
-        if (maze[x][y].type == GOLD) {
-            int id = gold_id[{x, y}];
+        // 如果当前格子是特殊点（金币或陷阱），mask回退
+        auto it = special_id.find({ x, y });
+        if (it != special_id.end()) {
+            int id = it->second;
             if (mask & (1 << id)) mask ^= (1 << id);
         }
         int tx = prev.first, ty = prev.second;
@@ -163,9 +142,9 @@ std::vector<std::vector<char>> ResourcePathPlanner::markPath(
         if (marked[pos.first][pos.second] == PATH)
             marked[pos.first][pos.second] = '*';
         else if (marked[pos.first][pos.second] == GOLD)
-            marked[pos.first][pos.second] = 'X';
+            marked[pos.first][pos.second] = 'g';
         else if (marked[pos.first][pos.second] == TRAP)
-            marked[pos.first][pos.second] = 'T';
+            marked[pos.first][pos.second] = 't';
     }
     return marked;
 }

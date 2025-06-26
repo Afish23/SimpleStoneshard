@@ -60,6 +60,5 @@ int main() {
     else {
         cout << "\n未找到有效路径！" << endl;
     }
-    cout << 1<<endl;
     return 0;  // 移除了重复的return语句
 }
