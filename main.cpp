@@ -35,10 +35,10 @@ int main() {
     auto result = bfs.minTurnSkillSequence(bossHps, skills);
 
     // 打印最优回合数和顺序到控制台（可选）
-    printf("min_turns: %d\n", result.first);
-    for (const auto& step : result.second) {
-        printf("%s\n", step.c_str());
-    }
+    //printf("min_turns: %d\n", result.first);
+    //for (const auto& step : result.second) {
+        //printf("%s\n", step.c_str());
+    //}
     // 自动可视化播放整个战斗流程
     fightBossVisualAuto(bossHps, skills, result.second);
 
