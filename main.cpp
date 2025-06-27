@@ -14,20 +14,28 @@ using namespace std;
 
 int main() {
 
-    // 定义Boss血量
-    vector<int> bossHps = { 40,60, 80 };
-    // 定义技能（伤害, 最大冷却）
-    vector<Skill> skills;
-    skills.push_back(Skill(15, 2)); // 技能1：伤害15，冷却2
-    skills.push_back(Skill(10, 0)); // 技能2：伤害10，冷却0
-    skills.push_back(Skill(25, 3)); // 技能3：伤害25，冷却3
+    // 读取JSON文件
+    ifstream ifs("boss_case.json");
+    nlohmann::json j;
+    ifs >> j;
+
+    // 解析Boss血量
+    vector<int> bossHps = j["B"].get<vector<int>>();
+
+    // 解析技能
+    std::vector<Skill> skills;
+    for (const auto& arr : j["PlayerSkills"]) {
+        int damage = arr[0];
+        int cooldown = arr[1];
+        skills.emplace_back(damage, cooldown);
+    }
 
     // 计算最优技能释放顺序
     BossFightStrategy bfs;
     auto result = bfs.minTurnSkillSequence(bossHps, skills);
 
     // 打印最优回合数和顺序到控制台（可选）
-    printf("最小回合数: %d\n", result.first);
+    printf("min_turns: %d\n", result.first);
     for (const auto& step : result.second) {
         printf("%s\n", step.c_str());
     }
