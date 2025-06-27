@@ -7,8 +7,11 @@
 #include <algorithm>
 #include <set>
 #include <iostream>
+#include <fstream>
+#include "json.hpp"
+#include"GameObjects.h"
 using namespace std;
-
+using json = nlohmann::json;
 // 定义迷宫单元格类型
 const char WALL = '#';
 const char PATH = ' ';
@@ -27,14 +30,14 @@ struct MazeCell {
 class MazeGenerator {
 public:
     // 生成迷宫主函数
-    static vector<vector<MazeCell>> generateMaze(int size, 
-                                              int goldCount, 
-                                              int trapCount, 
-                                              int lockerCount, 
-                                              int bossCount,
-                                              pair<int, int>& startPos,
-                                              pair<int, int>& exitPos);
-    
+    static vector<vector<MazeCell>> generateMaze(int size,
+        int goldCount,
+        int trapCount,
+        int lockerCount,
+        int bossCount,
+        pair<int, int>& startPos,
+        pair<int, int>& exitPos);
+
     // 打印迷宫
     static void printMaze(const vector<vector<MazeCell>>& maze);
     // 分治法生成迷宫
@@ -53,4 +56,8 @@ public:
         char elem,
         int count,
         const set<pair<int, int>>& forbidden);
+
+    //写入json文件
+    static void writeMazeToJson(const vector<vector<MazeCell>>& maze, const string& filename);
+    static shared_ptr<GameObject> createObject(char c, int x, int y);
 };
