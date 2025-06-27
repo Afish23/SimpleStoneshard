@@ -1,6 +1,6 @@
 #include "MazeGenerator.h"
 
-
+using json = nlohmann::json;
 vector<vector<MazeCell>> MazeGenerator::generateMaze(int size,
     int goldCount,
     int trapCount,
@@ -13,29 +13,29 @@ vector<vector<MazeCell>> MazeGenerator::generateMaze(int size,
     while (true) {
         maze.assign(size, vector<MazeCell>(size, MazeCell()));
 
-        // ������Χǽ
+        // 设置外围墙
         for (int i = 0; i < size; i++) {
             maze[0][i].type = maze[size - 1][i].type =
                 maze[i][0].type = maze[i][size - 1].type = WALL;
         }
 
-        // ���������Թ�
+        // 分治生成迷宫
         divide(maze, 1, 1, size - 2, size - 2);
 
-        // ���ѡ�������յ�
+        // 随机选择起点和终点
         auto paths = getAllPaths(maze);
         if (paths.size() < 2) continue;
 
-        /*random_shuffle(paths.begin(), paths.end());
+        random_shuffle(paths.begin(), paths.end());
         startPos = paths[0];
-        exitPos = paths[1];*/
+        exitPos = paths[1];
         maze[startPos.first][startPos.second].type = START;
         maze[exitPos.first][exitPos.second].type = EXIT;
 
         if (isConnected(maze, startPos, exitPos)) break;
     }
 
-    // ���ø���Ԫ��
+    // 放置各种元素
     set<pair<int, int>> forbidden = { startPos, exitPos };
     placeRandomElements(maze, GOLD, goldCount, forbidden);
     placeRandomElements(maze, TRAP, trapCount, forbidden);
@@ -118,7 +118,21 @@ void MazeGenerator::placeRandomElements(vector<vector<MazeCell>>& maze,
         maze[candidates[i].first][candidates[i].second].type = elem;
     }
 }
-
+void MazeGenerator::writeMazeToJson(const vector<vector<MazeCell>>& maze, const string& filename) {
+    int n = maze.size();
+    json j;
+    j["maze"] = nlohmann::json::array();
+    for (int i = 0; i < n; ++i) {
+        nlohmann::json row = nlohmann::json::array();
+        for (int j2 = 0; j2 < maze[i].size(); ++j2) {
+            row.push_back(std::string(1, maze[i][j2].type));
+        }
+        j["maze"].push_back(row);
+    }
+    std::ofstream fout(filename);
+    fout << j.dump(4); // 带缩进美观输出
+    fout.close();
+}
 void MazeGenerator::printMaze(const vector<vector<MazeCell>>& maze) {
     int n = maze.size();
     for (int i = 0; i < n; i++) {
@@ -133,3 +147,21 @@ void MazeGenerator::printMaze(const vector<vector<MazeCell>>& maze) {
         std::cout << std::endl;
     }
 }
+    MazeGenerator::writeMazeToJson(maze, "maze.json");
+}
+
+// 工厂函数，根据字符生成对象
+shared_ptr<GameObject> MazeGenerator::createObject(char c, int x, int y) {
+    switch (c) {
+    case '#': return make_shared<GameObject>(x, y, '#'); // 墙
+    case 'S': return make_shared<Player>(x, y, 100, 0, 20); // 玩家
+    case 'E': return make_shared<GameObject>(x, y, 'E'); // 出口（你可以新建 Exit 类）
+    case ' ': return make_shared<GameObject>(x, y, ' '); // 通道
+    case 'B': return make_shared<Boss>(x, y, 200, 30, 50, false, vector<Skill>());  // Boss
+    case 'G': return make_shared<Gold>(x, y);         // 金币
+    case 'T': return make_shared<Track>(x, y);        // 陷阱
+    case 'L': return make_shared<Locker>(x, y);       // 宝箱
+    default:  return nullptr;
+    }
+}
+
