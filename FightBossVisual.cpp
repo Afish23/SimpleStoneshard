@@ -1,10 +1,4 @@
 #include "FightBossVisual.h"
-#include <graphics.h>
-#include <thread>
-#include <chrono>
-#include <string>
-#include <cstdio>
-#include <cstdarg>
 
 // 播放每步的等待时间，单位毫秒
 const int step_sleep_ms = 1800;
@@ -19,7 +13,7 @@ void outtextxy_format(int x, int y, const wchar_t* fmt, ...) {
     outtextxy(x, y, buf);
 }
 
-// 绘制技能序列（显示在玩家头像旁边）
+
 void drawSkillSequence(
     int x, int y,
     const std::vector<std::string>& actions,
@@ -27,18 +21,17 @@ void drawSkillSequence(
 ) {
     settextcolor(BLACK);
     settextstyle(18, 0, L"Consolas");
-    outtextxy(x, y - 24, L"技能序列：");
-    for (int i = 0; i < actions.size(); ++i) {
-        // 当前回合高亮，其前面用深色，其后用浅色
-        if (i < currentIdx)
-            settextcolor(RGB(120, 120, 120)); // 已释放
-        else if (i == currentIdx)
-            settextcolor(RGB(255, 69, 0));    // 当前
-        else
-            settextcolor(RGB(180, 180, 180)); // 未释放
+    outtextxy(x, 10, L"战斗日志："); // 最顶部，y=10
+    int startIdx = 0;
+    int endIdx = currentIdx;
+    for (int i = startIdx; i <= endIdx && i < actions.size(); ++i) {
+        if (i < endIdx)
+            settextcolor(RGB(120, 120, 120));  // 已释放
+        else if (i == endIdx)
+            settextcolor(RGB(255, 69, 0));     // 当前
         wchar_t stepbuf[64];
         swprintf(stepbuf, 64, L"%2d. %hs", i + 1, actions[i].c_str());
-        outtextxy(x, y + i * 22, stepbuf);
+        outtextxy(x, 38 + (i - startIdx) * 22, stepbuf); // 从38开始，逐行向下
     }
 }
 
@@ -52,7 +45,7 @@ void drawBattleAuto(
     int currentActionIdx
 ) {
     cleardevice();
-    setbkcolor(WHITE);
+    setbkcolor(RGB(240, 240, 240));
     setfillcolor(RGB(30, 144, 255));
     fillrectangle(50, 350, 200, 500);
     settextcolor(BLACK);
@@ -66,8 +59,8 @@ void drawBattleAuto(
     // boss血条
     setfillcolor(GREEN);
     int showHp = bossHp > 0 ? bossHp : 0;
-    fillrectangle(500, 70, 500 + showHp * 2, 90);
-    outtextxy_format(500, 60, L"HP:%d/%d", showHp, bossMaxHp);
+    fillrectangle(500, 60, 500 + showHp * 2, 80);
+    outtextxy_format(500, 40, L"HP:%d/%d", showHp, bossMaxHp);
 
     // 技能按钮/冷却
     for (int i = 0; i < skills.size(); ++i) {
@@ -77,24 +70,26 @@ void drawBattleAuto(
         outtextxy_format(60 + i * 150, 550, L"CD:%d", cooldowns[i]);
     }
     // 消息
-    outtextxy_format(250, 400, L"%s", msg);
+    outtextxy_format(500, 400, L"%s", msg);
 
     // ------ 技能序列 ------
     drawSkillSequence(220, 330, actions, currentActionIdx);
 }
 
 void fightBossVisualAuto(
-    const std::vector<int>& bossHps,
-    const std::vector<Skill>& skills,
-    const std::vector<std::string>& actions
+    const vector<int>& bossHps,
+    const vector<Skill>& skills,
+    const vector<string>& actions
 ) {
     initgraph(800, 600);
+    setbkcolor(RGB(240, 240, 240));
+    cleardevice();
     int totalBoss = bossHps.size();
     int bossIdx = 0;
     int bossHp = bossHps[0];
     int bossMaxHp = bossHps[0];
     int turn = 0;
-    std::vector<int> cooldowns(skills.size(), 0);
+    vector<int> cooldowns(skills.size(), 0);
     int lastSkill = -1;
 
     for (int ai = 0; ai < actions.size(); ++ai) {
@@ -105,8 +100,7 @@ void fightBossVisualAuto(
             bossIdx = actBoss - 1;
             bossHp = bossHps[bossIdx];
             bossMaxHp = bossHp;
-            // 冷却保持不变
-            turn = 0;
+            // turn 不再重置
         }
         int dmg = skills[actSkill - 1].dmg;
         if (dmg > bossHp) dmg = bossHp;
@@ -117,11 +111,12 @@ void fightBossVisualAuto(
         ++turn;
         wchar_t buf[128];
         swprintf(buf, 128, L"回合%d：Skill%d 造成%d伤害", turn, actSkill, dmg);
-        // 关键：传递 actions 和 ai
         drawBattleAuto(bossIdx, turn, totalBoss, bossHp, bossMaxHp, skills, cooldowns, lastSkill, buf, actions, ai);
         std::this_thread::sleep_for(std::chrono::milliseconds(step_sleep_ms));
     }
-    drawBattleAuto(bossIdx, turn, totalBoss, bossHp, bossMaxHp, skills, cooldowns, -1, L"恭喜通关！", actions, actions.size());
-    system("pause");
+    // 总回合数提示
+    wchar_t finalMsg[128];
+    swprintf(finalMsg, 128, L"恭喜通关你用%d个回合击败了boss！", turn);
+    drawBattleAuto(bossIdx, turn, totalBoss, bossHp, bossMaxHp, skills, cooldowns, -1, finalMsg, actions, actions.size());
     closegraph();
 }
