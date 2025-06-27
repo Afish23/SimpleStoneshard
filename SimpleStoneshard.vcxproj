@@ -146,6 +146,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BossFightStrategy.cpp" />
+    <ClCompile Include="FightBossVisual.cpp" />
     <ClCompile Include="GameObjects.cpp" />
     <ClCompile Include="GreedyResourcePicker.cpp" />
     <ClCompile Include="main.cpp" />
@@ -156,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BossFightStrategy.h" />
+    <ClInclude Include="FightBossVisual.h" />
     <ClInclude Include="GameObjects.h" />
     <ClInclude Include="GreedyResourcePicker.h" />
     <ClInclude Include="json.hpp" />

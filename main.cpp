@@ -4,74 +4,35 @@
 #include "MazeGenerator.h"
 #include "PuzzleSolver.h"
 #include "ResourcePathPlanner.h"
+#include "FightBossVisual.h"
 #include "Utils.h"
+#include <iostream>
+#include <fstream>
+#include <memory>
+#include <vector>
 using namespace std;
 
 int main() {
-    srand(time(0));
 
-    int n;
-    cout << "ÊäÈëÃÔ¹¬³ß´ç (n¡Án, ×îĞ¡7): ";
-    cin >> n;
+    // å®šä¹‰Bossè¡€é‡
+    vector<int> bossHps = { 40,60, 80 };
+    // å®šä¹‰æŠ€èƒ½ï¼ˆä¼¤å®³, æœ€å¤§å†·å´ï¼‰
+    vector<Skill> skills;
+    skills.push_back(Skill(15, 2)); // æŠ€èƒ½1ï¼šä¼¤å®³15ï¼Œå†·å´2
+    skills.push_back(Skill(10, 0)); // æŠ€èƒ½2ï¼šä¼¤å®³10ï¼Œå†·å´0
+    skills.push_back(Skill(25, 3)); // æŠ€èƒ½3ï¼šä¼¤å®³25ï¼Œå†·å´3
 
-    if (n < 7) {
-        cout << "³ß´ç²»ÄÜĞ¡ÓÚ7\n";
-        return 1;
+    // è®¡ç®—æœ€ä¼˜æŠ€èƒ½é‡Šæ”¾é¡ºåº
+    BossFightStrategy bfs;
+    auto result = bfs.minTurnSkillSequence(bossHps, skills);
+
+    // æ‰“å°æœ€ä¼˜å›åˆæ•°å’Œé¡ºåºåˆ°æ§åˆ¶å°ï¼ˆå¯é€‰ï¼‰
+    printf("æœ€å°å›åˆæ•°: %d\n", result.first);
+    for (const auto& step : result.second) {
+        printf("%s\n", step.c_str());
     }
-
-    // ÅäÖÃ¸÷ÖÖÔªËØÊıÁ¿
-    int goldCount = max(1, n / 4);
-    int trapCount = max(1, n / 5);
-    int lockerCount = max(1, n / 6);
-    int bossCount = 1;
-
-    // Éú³ÉÃÔ¹¬
-    pair<int, int> startPos, exitPos;
-    cout << "ÇëÊäÈë³õÊ¼µã×ø±ê£¨x yĞÎÊ½£¬´óÓÚ0£¬Ğ¡ÓÚn - 1£©£º";
-    cin >> startPos.first >> startPos.second;
-    cout << "ÇëÊäÈëÖÕÖ¹µã×ø±ê£¨x yĞÎÊ½£¬´óÓÚ0£¬Ğ¡ÓÚn - 1£©£º";
-	cin >> exitPos.first >> exitPos.second;
-    auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
-
-    // ´òÓ¡ÃÔ¹¬
-    cout << "\nÉú³ÉµÄÃÔ¹¬ÈçÏÂ£º\n";
-    MazeGenerator::printMaze(maze);
-
-    // 1. ¶ÁÈ¡JSONÎÄ¼ş      Ğè½øĞĞ²ğ·Ö£¬µ±Ç°Ë¼Â·£¬×öÖ÷½çÃæ£¬·Ö³ÉÁ½¸ö¹¦ÄÜ£¬1£¬Ëæ»úÉú³ÉÃÔ¹¬£»2.¶ÁÈ¡ÎÄ¼ş²¢¿ªÊ¼ÓÎÏ·
-    ifstream fin("maze.json");
-    if (!fin) {
-        cerr << "ÎŞ·¨´ò¿ªmaze.jsonÎÄ¼ş" << endl;
-        return 1;
-    }
-    json j;
-    fin >> j;
-
-    // 2. »ñÈ¡ÃÔ¹¬Êı×é
-    auto maze_arr = j["maze"];
-    int nn = maze_arr.size();
-    int m = maze_arr[0].size();
-
-    // 3. ³õÊ¼»¯¶şÎ¬ÖÇÄÜÖ¸ÕëÊı×é
-    vector<vector<shared_ptr<GameObject>>> maze_objs(nn, vector<shared_ptr<GameObject>>(m, nullptr));
-
-    // 4. ¸ù¾İ×Ö·ûÊµÀı»¯¶ÔÏó
-    for (int i = 0; i < nn; ++i) {
-        for (int j2 = 0; j2 < m; ++j2) {
-            char c = maze_arr[i][j2].get<string>()[0];
-            maze_objs[i][j2] = MazeGenerator::createObject(c, i, j2);
-        }
-    }
-
-    // 5. Êä³ö²âÊÔ
-   /* for (int i = 0; i < nn; ++i) {
-        for (int j2 = 0; j2 < m; ++j2) {
-            if (maze_objs[i][j2])
-                cout << maze_objs[i][j2]->type << ' ';
-            else
-                cout << "? ";
-        }
-        cout << endl;
-    }*/
+    // è‡ªåŠ¨å¯è§†åŒ–æ’­æ”¾æ•´ä¸ªæˆ˜æ–—æµç¨‹
+    fightBossVisualAuto(bossHps, skills, result.second);
 
     return 0;
 }
