@@ -6,53 +6,40 @@
 #include "ResourcePathPlanner.h"
 #include "FightBossVisual.h"
 #include "Utils.h"
+#include <iostream>
+#include <fstream>
+#include <memory>
+#include <vector>
 using namespace std;
 
 int main() {
-    //srand(time(0));
 
-    //int n;
-    //cout << "ÊäÈëÃÔ¹¬³ß´ç (n¡Án, ×îĞ¡7): ";
-    //cin >> n;
+    // ç’‡è¯²å½‡JSONé‚å›¦æ¬¢
+    ifstream ifs("boss_case.json");
+    nlohmann::json j;
+    ifs >> j;
 
-    //if (n < 7) {
-    //    cout << "³ß´ç²»ÄÜĞ¡ÓÚ7\n";
-    //    return 1;
-    //}
+    // ç‘™ï½†ç€½Bossç›ï¿½é–²ï¿½
+    vector<int> bossHps = j["B"].get<vector<int>>();
 
-    //// ÅäÖÃ¸÷ÖÖÔªËØÊıÁ¿
-    //int goldCount = max(1, n / 4);
-    //int trapCount = max(1, n / 5);
-    //int lockerCount = max(1, n / 6);
-    //int bossCount = 1;
-
-    //// Éú³ÉÃÔ¹¬
-    //pair<int, int> startPos, exitPos;
-    //auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
-
-    //// ´òÓ¡ÃÔ¹¬
-    //cout << "\nÉú³ÉµÄÃÔ¹¬ÈçÏÂ£º\n";
-    //MazeGenerator::printMaze(maze);
-    // ¶¨ÒåBossÑªÁ¿
-    vector<int> bossHps = { 19,17,14,19 };
-
-    // ¶¨Òå¼¼ÄÜ£¨ÉËº¦, ×î´óÀäÈ´£©
-    vector<Skill> skills;
-    skills.push_back(Skill(6, 2)); 
-    skills.push_back(Skill(9, 5)); 
-    skills.push_back(Skill(5, 3));
-    skills.push_back(Skill(4, 3));
-    skills.push_back(Skill(2, 0));
-    // ¼ÆËã×îÓÅ¼¼ÄÜÊÍ·ÅË³Ğò
+    // ç‘™ï½†ç€½é¶ï¿½é‘³ï¿½
+    std::vector<Skill> skills;
+    for (const auto& arr : j["PlayerSkills"]) {
+        int damage = arr[0];
+        int cooldown = arr[1];
+        skills.emplace_back(damage, cooldown);
+    }
+    // è®¡ç®—æœ€ä¼˜æŠ€èƒ½é‡Šæ”¾é¡ºåº
     BossFightStrategy bfs;
     auto result = bfs.minTurnSkillSequence(bossHps, skills);
 
-    // ´òÓ¡×îÓÅ»ØºÏÊıºÍË³Ğòµ½¿ØÖÆÌ¨£¨¿ÉÑ¡£©
-    printf("×îĞ¡»ØºÏÊı: %d\n", result.first);
+    // éµæ’³åµƒéˆï¿½æµ¼æ¨ºæ´–éšå ŸæšŸéœå²„ã€æ´å¿“åŸŒéºÑƒåŸ—é™å¸®ç´™é™îˆï¿½å¤›ç´š
+    printf("min_turns: %d\n", result.first);
     for (const auto& step : result.second) {
         printf("%s\n", step.c_str());
     }
-
-    // ×Ô¶¯¿ÉÊÓ»¯²¥·ÅÕû¸öÕ½¶·Á÷³Ì
+    // é‘·î„å§©é™îˆî‹é–æ ¨æŒ±é€ç‚¬æš£æ¶“î…å¬é‚æ¥ç¥¦ç»‹ï¿½
     fightBossVisualAuto(bossHps, skills, result.second);
+
+    return 0;
 }

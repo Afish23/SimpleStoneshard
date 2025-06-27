@@ -1,5 +1,7 @@
 #pragma once
 #include <iostream>
+#include <set>
+#include <utility>
 #include <string>
 #include <vector>
 using namespace std;
@@ -10,6 +12,9 @@ public:
     char type;
     GameObject(int x = 0, int y = 0, char type = '#');
     virtual ~GameObject() {}
+    /*pair<int, int> getPosition() const {
+        return { x, y };
+    }*/
 };
 
 class Skill {
@@ -33,7 +38,6 @@ public:
     int hp;
     int goldDrop;
     bool defeated;
-    // 只声明，不实现
     Boss( int hp = 200);
     void takeDamage(int dmg);
     bool isAlive() const;
