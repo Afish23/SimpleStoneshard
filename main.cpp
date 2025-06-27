@@ -42,10 +42,14 @@ int main() {
     skills.push_back(Skill(25, 3)); // 技能3：伤害25，冷却3
     // 生成迷宫
     pair<int, int> startPos, exitPos;
+    cout << "�������ʼ�����꣨x>=1,y>=1����ʽ��";
+    cin >> startPos.first >> startPos.second;
+    cout << "��������ֹ�����꣨x<=" << n - 2 << ",y<=" << n - 2 << "����ʽ��";
+    cin >> exitPos.first >> exitPos.second;
     cout << "请输入初始点坐标（x y形式，大于0，小于n - 1）：";
     cin >> startPos.first >> startPos.second;
     cout << "请输入终止点坐标（x y形式，大于0，小于n - 1）：";
-	cin >> exitPos.first >> exitPos.second;
+	  cin >> exitPos.first >> exitPos.second;
     auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
 
     // 计算最优技能释放顺序
@@ -95,5 +99,27 @@ int main() {
         cout << endl;
     }*/
 
-    return 0;
+    // ·���滮�������˱�������ʹ��startPos��exitPos��
+    auto result = ResourcePathPlanner::findOptimalPath(maze, startPos, exitPos);
+
+    // �������
+    if (result.success) {
+        cout << "\n�ҵ�����·�����ܼ�ֵ: " << result.totalValue << endl;
+
+        // ���ӻ���ʾ
+        auto markedMaze = ResourcePathPlanner::markPath(maze, result.path);
+        cout << "\n·�����ͼ (* ��ʾ·��):\n";
+        MazeGenerator::printMaze(markedMaze);
+
+        // ���·������
+        cout << "\n·��������:\n";
+        for (auto& p : result.path) {
+            cout << "(" << p.first << "," << p.second << ") ";
+        }
+        cout << endl;
+    }
+    else {
+        cout << "\nδ�ҵ���Ч·����" << endl;
+    }
+    return 0;  // �Ƴ����ظ���return���
 }
