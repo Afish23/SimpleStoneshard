@@ -1,8 +1,16 @@
 #pragma once
 #include <vector>
+#include <graphics.h>
+#include <thread>
+#include <chrono>
+#include <string>
+#include <cstdio>
+#include <cstdarg>
+
 #include "GameObjects.h"
 
 // 自动Boss战可视化（根据最优技能顺序自动播放）
+
 
 void fightBossVisualAuto(const std::vector<int>& bossHps, const std::vector<Skill>& skills, const std::vector<std::string>& actions);
 
