@@ -4,57 +4,79 @@
 #include "MazeGenerator.h"
 #include "PuzzleSolver.h"
 #include "ResourcePathPlanner.h"
+#include "FightBossVisual.h"
 #include "Utils.h"
 using namespace std;
 
 int main() {
-    srand(time(0));
+    //srand(time(0));
 
-    int n;
-    cout << "ÊäÈëÃÔ¹¬³ß´ç (n¡Án, ×îĞ¡7): ";
-    cin >> n;
+    //int n;
+    //cout << "è¾“å…¥è¿·å®«å°ºå¯¸ (nÃ—n, æœ€å°7): ";
+    //cin >> n;
 
-    if (n < 7) {
-        cout << "³ß´ç²»ÄÜĞ¡ÓÚ7\n";
-        return 1;
-    }
+    //if (n < 7) {
+    //    cout << "å°ºå¯¸ä¸èƒ½å°äº7\n";
+    //    return 1;
+    //}
 
-    // ÅäÖÃ¸÷ÖÖÔªËØÊıÁ¿
-    int goldCount = max(1, n / 4);
-    int trapCount = max(1, n / 5);
-    int lockerCount = max(1, n / 6);
-    int bossCount = 1;
+    //// é…ç½®å„ç§å…ƒç´ æ•°é‡
+    //int goldCount = max(1, n / 4);
+    //int trapCount = max(1, n / 5);
+    //int lockerCount = max(1, n / 6);
+    //int bossCount = 1;
 
-    // Éú³ÉÃÔ¹¬
+    //// ç”Ÿæˆè¿·å®«
+    //pair<int, int> startPos, exitPos;
+    //auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
+
+    //// æ‰“å°è¿·å®«
+    //cout << "\nç”Ÿæˆçš„è¿·å®«å¦‚ä¸‹ï¼š\n";
+    //MazeGenerator::printMaze(maze);
+    // å®šä¹‰Bossè¡€é‡
+    vector<int> bossHps = { 40,60, 80 };
+    // å®šä¹‰æŠ€èƒ½ï¼ˆä¼¤å®³, æœ€å¤§å†·å´ï¼‰
+    vector<Skill> skills;
+    skills.push_back(Skill(15, 2)); // æŠ€èƒ½1ï¼šä¼¤å®³15ï¼Œå†·å´2
+    skills.push_back(Skill(10, 0)); // æŠ€èƒ½2ï¼šä¼¤å®³10ï¼Œå†·å´0
+    skills.push_back(Skill(25, 3)); // æŠ€èƒ½3ï¼šä¼¤å®³25ï¼Œå†·å´3
+    // ç”Ÿæˆè¿·å®«
     pair<int, int> startPos, exitPos;
-    cout << "ÇëÊäÈë³õÊ¼µã×ø±ê£¨x yĞÎÊ½£¬´óÓÚ0£¬Ğ¡ÓÚn - 1£©£º";
+    cout << "è¯·è¾“å…¥åˆå§‹ç‚¹åæ ‡ï¼ˆx yå½¢å¼ï¼Œå¤§äº0ï¼Œå°äºn - 1ï¼‰ï¼š";
     cin >> startPos.first >> startPos.second;
-    cout << "ÇëÊäÈëÖÕÖ¹µã×ø±ê£¨x yĞÎÊ½£¬´óÓÚ0£¬Ğ¡ÓÚn - 1£©£º";
+    cout << "è¯·è¾“å…¥ç»ˆæ­¢ç‚¹åæ ‡ï¼ˆx yå½¢å¼ï¼Œå¤§äº0ï¼Œå°äºn - 1ï¼‰ï¼š";
 	cin >> exitPos.first >> exitPos.second;
     auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
 
-    // ´òÓ¡ÃÔ¹¬
-    cout << "\nÉú³ÉµÄÃÔ¹¬ÈçÏÂ£º\n";
-    MazeGenerator::printMaze(maze);
+    // è®¡ç®—æœ€ä¼˜æŠ€èƒ½é‡Šæ”¾é¡ºåº
+    BossFightStrategy bfs;
+    auto result = bfs.minTurnSkillSequence(bossHps, skills);
 
-    // 1. ¶ÁÈ¡JSONÎÄ¼ş      Ğè½øĞĞ²ğ·Ö£¬µ±Ç°Ë¼Â·£¬×öÖ÷½çÃæ£¬·Ö³ÉÁ½¸ö¹¦ÄÜ£¬1£¬Ëæ»úÉú³ÉÃÔ¹¬£»2.¶ÁÈ¡ÎÄ¼ş²¢¿ªÊ¼ÓÎÏ·
+    // æ‰“å°æœ€ä¼˜å›åˆæ•°å’Œé¡ºåºåˆ°æ§åˆ¶å°ï¼ˆå¯é€‰ï¼‰
+    printf("æœ€å°å›åˆæ•°: %d\n", result.first);
+    for (const auto& step : result.second) {
+        printf("%s\n", step.c_str());
+    }
+    // è‡ªåŠ¨å¯è§†åŒ–æ’­æ”¾æ•´ä¸ªæˆ˜æ–—æµç¨‹
+    fightBossVisualAuto(bossHps, skills, result.second);
+    // 1. è¯»å–JSONæ–‡ä»¶      éœ€è¿›è¡Œæ‹†åˆ†ï¼Œå½“å‰æ€è·¯ï¼Œåšä¸»ç•Œé¢ï¼Œåˆ†æˆä¸¤ä¸ªåŠŸèƒ½ï¼Œ1ï¼Œéšæœºç”Ÿæˆè¿·å®«ï¼›2.è¯»å–æ–‡ä»¶å¹¶å¼€å§‹æ¸¸æˆ
     ifstream fin("maze.json");
     if (!fin) {
-        cerr << "ÎŞ·¨´ò¿ªmaze.jsonÎÄ¼ş" << endl;
+        cerr << "æ— æ³•æ‰“å¼€maze.jsonæ–‡ä»¶" << endl;
         return 1;
     }
     json j;
     fin >> j;
 
-    // 2. »ñÈ¡ÃÔ¹¬Êı×é
+    // 2. è·å–è¿·å®«æ•°ç»„
     auto maze_arr = j["maze"];
     int nn = maze_arr.size();
     int m = maze_arr[0].size();
 
-    // 3. ³õÊ¼»¯¶şÎ¬ÖÇÄÜÖ¸ÕëÊı×é
+    // 3. åˆå§‹åŒ–äºŒç»´æ™ºèƒ½æŒ‡é’ˆæ•°ç»„
     vector<vector<shared_ptr<GameObject>>> maze_objs(nn, vector<shared_ptr<GameObject>>(m, nullptr));
 
-    // 4. ¸ù¾İ×Ö·ûÊµÀı»¯¶ÔÏó
+    // 4. æ ¹æ®å­—ç¬¦å®ä¾‹åŒ–å¯¹è±¡
     for (int i = 0; i < nn; ++i) {
         for (int j2 = 0; j2 < m; ++j2) {
             char c = maze_arr[i][j2].get<string>()[0];
@@ -62,7 +84,7 @@ int main() {
         }
     }
 
-    // 5. Êä³ö²âÊÔ
+    // 5. è¾“å‡ºæµ‹è¯•
    /* for (int i = 0; i < nn; ++i) {
         for (int j2 = 0; j2 < m; ++j2) {
             if (maze_objs[i][j2])

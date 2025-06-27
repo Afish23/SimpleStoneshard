@@ -14,39 +14,29 @@ public:
 
 class Skill {
 public:
-    string name;
     int dmg;
-    int cd;
-    Skill(const string& name = "", int dmg = 0, int cd = 0);
+    int maxCd;
+    int curCd;
+    Skill (int dmg = 0, int maxCd = 0);
 };
 
 class Player : public GameObject {
 public:
-    int hp;
-    int gold;
-    int attackPower;
     vector<Skill> skills;
-    Player(int x = 0, int y = 0, int hp = 100, int gold = 0, int attackPower = 20);
+    Player(int x = 0, int y = 0);
     void move(int dx, int dy);
-    void addGold(int amount);
-    void takeDamage(int dmg);
-    void heal(int amount);
-    void normalAttack(class Boss& boss);
     void addSkill(const Skill& skill);
 };
 
-class Boss : public GameObject {
+class Boss  {
 public:
     int hp;
-    int attackPower;
     int goldDrop;
     bool defeated;
-    vector<Skill> skills;
     // 只声明，不实现
-    Boss(int x = 0, int y = 0, int hp = 200, int attackPower = 30, int goldDrop = 50, bool defeated = false, const vector<Skill>& skills = {});
+    Boss( int hp = 200);
     void takeDamage(int dmg);
     bool isAlive() const;
-    void normalAttack(Player& player);
 };
 
 class Gold : public GameObject {
