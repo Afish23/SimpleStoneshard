@@ -11,7 +11,6 @@
 #include <vector>
 using namespace std;
 
-
 // 假设正确密码
 vector<int> target = { 7, 5, 2 };
 // 根据正确密码给出线索
