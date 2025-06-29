@@ -25,6 +25,9 @@
     <ClCompile Include="Utils.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="FightBossVisual.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BossFightStrategy.h">
@@ -48,6 +51,9 @@
     <ClInclude Include="Utils.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="FightBossVisual.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="PuzzleSolver.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -59,5 +65,13 @@
     <Filter Include="头文件">
       <UniqueIdentifier>{4854e8f9-593c-4311-951a-00be28aa42d8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{f29031c0-3fb9-4ede-a652-da684e3479ef}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="boss_case.json">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

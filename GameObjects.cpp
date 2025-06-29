@@ -4,8 +4,8 @@ using namespace std;
 GameObject::GameObject(int x, int y, char type)
     : x(x), y(y), type(type) {}
 
-Skill::Skill(int dmg, int maxCd)
-    : dmg(dmg), maxCd(maxCd), curCd(0) {}
+Skill::Skill( int dmg, int maxCd)
+    :  dmg(dmg), maxCd(maxCd),curCd(0) {}
 
 Player::Player(int x, int y)
     : GameObject(x, y, 'P') {}
@@ -22,7 +22,7 @@ void Player::addSkill(const Skill& skill)
 }
 
 Boss::Boss(int hp)
-    : hp(hp), defeated(false), goldDrop(10) {}
+    : hp(hp),defeated(false), goldDrop(10){}
 
 void Boss::takeDamage(int dmg)
 {
