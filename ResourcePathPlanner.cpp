@@ -45,13 +45,14 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
     struct State {
         int value, steps;
         std::pair<int, int> prev;
+        int prevMask;  // 新增字段
     };
     std::vector<std::vector<std::vector<State>>> dp(
-        n, std::vector<std::vector<State>>(n, std::vector<State>(1 << spnum, { -10000, INT_MAX, {-1,-1} })));
+        n, std::vector<std::vector<State>>(n, std::vector<State>(1 << spnum, { -10000, INT_MAX, {-1,-1}, -1})));
     struct Node { int x, y, mask; };
     std::queue<Node> q;
 
-    dp[start.first][start.second][0] = { 0, 0, {-1,-1} };
+    dp[start.first][start.second][0] = { 0, 0, {-1,-1}, -1 };
     q.push({ start.first, start.second, 0 });
 
     while (!q.empty()) {
@@ -82,6 +83,7 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
                 ref.value = nvalue;
                 ref.steps = nsteps;
                 ref.prev = { x, y };
+                ref.prevMask = mask;  // 存储前驱掩码
                 q.push({ nx, ny, nmask });
                 //cout << x<<" "<<y<<" "<<" "<<nx<<" "<<ny << endl;
             }
@@ -105,31 +107,39 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
         return result;
     }
 
-    // 4. 回溯路径
     std::vector<std::pair<int, int>> path;
-    int x = exit.first, y = exit.second, mask = bestMask;
-    while (!(x == start.first && y == start.second)) {
+    int x = exit.first, y = exit.second;
+    int mask = bestMask;
+
+    // 从终点回溯到起点
+    while (x != -1 || y != -1) {  // 使用(-1,-1)作为起点前驱的终止条件
+        // 添加当前节点到路径
         path.push_back({ x, y });
-        auto prev = dp[x][y][mask].prev;
-        // 如果当前格子是特殊点（金币或陷阱），mask回退
-        /*cout << mask << " " << prev.first << "," << prev.second << endl;*/
-        auto it = special_id.find({ x, y });
-        if (it != special_id.end()) {
-            int id = it->second;
-            if (mask & (1 << id)) mask ^= (1 << id);
+
+        // 获取当前状态
+        State& s = dp[x][y][mask];
+
+        // 到达起点（前驱为(-1,-1)）时终止
+        if (s.prev.first == -1 && s.prev.second == -1) {
+            break;
         }
-        int tx = prev.first, ty = prev.second;
-        x = tx, y = ty;
+
+        // 更新为前驱状态
+        int nextMask = s.prevMask;  // 使用存储的前驱掩码
+        x = s.prev.first;
+        y = s.prev.second;
+        mask = nextMask;
     }
-    path.push_back(start);
+
+    // 反转路径（当前是从终点到起点）
     std::reverse(path.begin(), path.end());
 
+    // 设置结果
     result.success = true;
     result.path = path;
     result.totalValue = bestValue;
 
     return result;
-
 }
 
 std::vector<std::vector<MazeCell>> ResourcePathPlanner::markPath(
