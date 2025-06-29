@@ -47,7 +47,7 @@ vector<vector<MazeCell>> MazeGenerator::generateMaze(int size,
 
 void MazeGenerator::divide(vector<vector<MazeCell>>& maze, int x1, int y1, int x2, int y2) {
     if (x2 - x1 < 2 || y2 - y1 < 2) return;
-    bool horizontal = rand() % 2 ;
+    bool horizontal = (rand() % 2 == 0);
 
     if (horizontal) {
         int split_row = x1 + 1 + rand() % (x2 - x1 - 1);
@@ -133,7 +133,6 @@ void MazeGenerator::writeMazeToJson(const vector<vector<MazeCell>>& maze, const 
         if (i != n - 1) fout << ",";
         fout << "\n";
     }
-
     fout << "  ]\n}\n";
     fout.close();
 }
@@ -143,27 +142,22 @@ void MazeGenerator::printMaze(const vector<vector<MazeCell>>& maze) {
         for (int j = 0; j < n; j++)
             cout << maze[i][j].type << " ";
         cout << endl;
-    }
+    }    MazeGenerator::writeMazeToJson(maze, "maze.json");
 }
- void MazeGenerator::printMaze(const vector<vector<char>>& maze) {
-    for (const auto& row : maze) {
-        for (char c : row) std::cout << c << " ";
-        std::cout << std::endl;
-    }
-}
-
 
 // 工厂函数，根据字符生成对象
-shared_ptr<GameObject> MazeGenerator::createObject(char c, int x, int y) {
-    switch (c) {
-    case '#': return make_shared<GameObject>(x, y, '#'); // 墙
-    case 'S': return make_shared<Player>(x, y); // 玩家
-    case 'E': return make_shared<GameObject>(x, y, 'E'); // 出口（你可以新建 Exit 类）
-    case ' ': return make_shared<GameObject>(x, y, ' '); // 通道
-    case 'G': return make_shared<Gold>(x, y);         // 金币
-    case 'T': return make_shared<Track>(x, y);        // 陷阱
-    case 'L': return make_shared<Locker>(x, y);       // 宝箱
-    default:  return nullptr;
-    }
-}
+//shared_ptr<GameObject> MazeGenerator::createObject(char c, int x, int y) {
+//    switch (c) {
+//    case '#': return make_shared<GameObject>(x, y, '#'); // 墙
+//    case 'S': return make_shared<Player>(x, y); // 玩家
+//    case 'E': return make_shared<GameObject>(x, y, 'E'); // 出口（你可以新建 Exit 类）
+//    case ' ': return make_shared<GameObject>(x, y, ' '); // 通道
+//    case 'B': return make_shared<GameObject>(x, y, 'B');  // Boss
+//    case 'G': return make_shared<Gold>(x, y);         // 金币
+//    case 'T': return make_shared<Track>(x, y);        // 陷阱
+//    case 'L': return make_shared<Locker>(x, y);       // 宝箱
+//    default:  return nullptr;
+//    }
+//}
+
 
