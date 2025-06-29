@@ -1,9 +1,10 @@
-#include "BossFightStrategy.h"
+﻿#include "BossFightStrategy.h"
 #include "GameObjects.h"
 #include "GreedyResourcePicker.h"
 #include "MazeGenerator.h"
 #include "PuzzleSolver.h"
 #include "ResourcePathPlanner.h"
+#include"FightBossVisual.h"
 #include "Utils.h"
 #include <iostream>
 #include <fstream>
@@ -59,7 +60,6 @@ int main() {
         MazeGenerator::writeMazeToJson(maze, "maze.json");
         cout << "已保存到 maze.json\n";
     //srand(time(0));
-
     }
     else if (choice == 2) {
         pair<int, int> startPos, exitPos;//起止点坐标对
@@ -150,6 +150,7 @@ int main() {
         int damage = arr[0];
         int cooldown = arr[1];
         skills.emplace_back(damage, cooldown);
+
     }
 
     // 计算最优技能释放顺序
@@ -164,6 +165,7 @@ int main() {
     // 自动可视化播放整个战斗流程
     fightBossVisualAuto(bossHps, skills, result.second);
           
+
         }
         else {
             cout << "\n未找到有效路径！" << endl;

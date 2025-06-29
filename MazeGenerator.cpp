@@ -1,4 +1,4 @@
-#include "MazeGenerator.h"
+﻿#include "MazeGenerator.h"
 
 using json = nlohmann::json;
 vector<vector<MazeCell>> MazeGenerator::generateMaze(int size,
@@ -159,5 +159,4 @@ void MazeGenerator::printMaze(const vector<vector<MazeCell>>& maze) {
 //    default:  return nullptr;
 //    }
 //}
-
 

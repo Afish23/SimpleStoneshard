@@ -1,4 +1,4 @@
-#include "ResourcePathPlanner.h"
+ï»¿#include "ResourcePathPlanner.h"
 #include <algorithm>
 #include <iostream>
 #include <queue>
@@ -9,7 +9,7 @@ namespace {
     const int dy[4] = { 0, 0, -1, 1 };
 }
 
-// ·µ»Ø¸ñ×ÓµÄ¼ÛÖµ£¨½ğ±ÒÖ»ÄÜ³ÔÒ»´ÎÓÉ×´Ì¬»ú¿ØÖÆ£©
+// è¿”å›æ ¼å­çš„ä»·å€¼ï¼ˆé‡‘å¸åªèƒ½åƒä¸€æ¬¡ç”±çŠ¶æ€æœºæ§åˆ¶ï¼‰
 int ResourcePathPlanner::getValue(char cellType) {
     switch (cellType) {
     case GOLD: return 5;
@@ -30,7 +30,7 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
     int n = maze.size();
     if (n == 0) return result;
 
-    // 1. Í³¼ÆËùÓĞ½ğ±ÒºÍÏİÚå±àºÅ
+    // 1. ç»Ÿè®¡æ‰€æœ‰é‡‘å¸å’Œé™·é˜±ç¼–å·
     std::map<std::pair<int, int>, int> special_id;
     int spnum = 0;
     for (int i = 0; i < n; ++i)
@@ -38,7 +38,7 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
             if (maze[i][j].type == GOLD || maze[i][j].type == TRAP)
                 special_id[{i, j}] = spnum++;
     if (spnum > 20) {
-        std::cerr << "½ğ±Ò+ÏİÚå¹ı¶à£¨" << spnum << "£©£¬²»ÊÊºÏ×´Ì¬Ñ¹ËõĞ´·¨£¡" << std::endl;
+        std::cerr << "é‡‘å¸+é™·é˜±è¿‡å¤šï¼ˆ" << spnum << "ï¼‰ï¼Œä¸é€‚åˆçŠ¶æ€å‹ç¼©å†™æ³•ï¼" << std::endl;
         return result;
     }
 
@@ -83,11 +83,13 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
                 ref.steps = nsteps;
                 ref.prev = { x, y };
                 q.push({ nx, ny, nmask });
+                //cout << x<<" "<<y<<" "<<" "<<nx<<" "<<ny << endl;
             }
         }
+
     }
 
-    // 3. ÔÚÖÕµãËùÓĞmaskÖĞÕÒ×î´ó¼ÛÖµ×î¶ÌÂ·¾¶
+    // 3. åœ¨ç»ˆç‚¹æ‰€æœ‰maskä¸­æ‰¾æœ€å¤§ä»·å€¼æœ€çŸ­è·¯å¾„
     int bestValue = -10000, bestSteps = INT_MAX, bestMask = -1;
     for (int mask = 0; mask < (1 << spnum); ++mask) {
         State& s = dp[exit.first][exit.second][mask];
@@ -103,13 +105,14 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
         return result;
     }
 
-    // 4. »ØËİÂ·¾¶
+    // 4. å›æº¯è·¯å¾„
     std::vector<std::pair<int, int>> path;
     int x = exit.first, y = exit.second, mask = bestMask;
     while (!(x == start.first && y == start.second)) {
         path.push_back({ x, y });
         auto prev = dp[x][y][mask].prev;
-        // Èç¹ûµ±Ç°¸ñ×ÓÊÇÌØÊâµã£¨½ğ±Ò»òÏİÚå£©£¬mask»ØÍË
+        // å¦‚æœå½“å‰æ ¼å­æ˜¯ç‰¹æ®Šç‚¹ï¼ˆé‡‘å¸æˆ–é™·é˜±ï¼‰ï¼Œmaskå›é€€
+        /*cout << mask << " " << prev.first << "," << prev.second << endl;*/
         auto it = special_id.find({ x, y });
         if (it != special_id.end()) {
             int id = it->second;
@@ -124,27 +127,35 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
     result.success = true;
     result.path = path;
     result.totalValue = bestValue;
+
     return result;
+
 }
 
-std::vector<std::vector<char>> ResourcePathPlanner::markPath(
+std::vector<std::vector<MazeCell>> ResourcePathPlanner::markPath(
     const std::vector<std::vector<MazeCell>>& originalMaze,
     const std::vector<std::pair<int, int>>& path)
 {
-    std::vector<std::vector<char>> marked(
-        originalMaze.size(),
-        std::vector<char>(originalMaze[0].size()));
-    for (size_t i = 0; i < originalMaze.size(); i++)
-        for (size_t j = 0; j < originalMaze[i].size(); j++)
-            marked[i][j] = originalMaze[i][j].type;
+    // åˆ›å»ºåŸå§‹è¿·å®«çš„æ·±æ‹·è´
+    std::vector<std::vector<MazeCell>> markedMaze = originalMaze;
 
+    // æ ‡è®°è·¯å¾„ä¸Šçš„å•å…ƒæ ¼
     for (const auto& pos : path) {
-        if (marked[pos.first][pos.second] == PATH)
-            marked[pos.first][pos.second] = '*';
-        else if (marked[pos.first][pos.second] == GOLD)
-            marked[pos.first][pos.second] = 'g';
-        else if (marked[pos.first][pos.second] == TRAP)
-            marked[pos.first][pos.second] = 't';
+        int i = pos.first;
+        int j = pos.second;
+
+        // æ ¹æ®å•å…ƒæ ¼ç±»å‹è®¾ç½®ä¸åŒçš„æ ‡è®°
+        if (markedMaze[i][j].type == PATH) {
+            markedMaze[i][j].type = '*';  // è·¯å¾„æ ‡è®°
+        }
+        else if (markedMaze[i][j].type == GOLD) {
+            markedMaze[i][j].type = 'g';  // é‡‘å¸æ ‡è®°
+        }
+        else if (markedMaze[i][j].type == TRAP) {
+            markedMaze[i][j].type = 't';  // é™·é˜±æ ‡è®°
+        }
+        // å…¶ä»–ç±»å‹ä¿æŒä¸å˜
     }
-    return marked;
+
+    return markedMaze;
 }
