@@ -64,12 +64,13 @@ void drawBattleAuto(
     fillrectangle(500, 60, 500 + showHp * 2, 80);
     outtextxy_format(500, 40, L"HP:%d/%d", showHp, bossMaxHp);
 
-    // 技能按钮/冷却
+    // 技能按钮/冷却/伤害，编号从0开始
     for (int i = 0; i < skills.size(); ++i) {
         setfillcolor(lastSkill == i ? RGB(255, 215, 0) : LIGHTGRAY); // 上一步技能高亮
         fillrectangle(50 + i * 150, 520, 200 + i * 150, 570);
-        outtextxy_format(60 + i * 150, 530, L"Skill%d", i + 1);
-        outtextxy_format(60 + i * 150, 550, L"CD:%d", cooldowns[i]);
+        outtextxy_format(100 + i * 150, 530, L"Skill%d", i); // 技能编号从0开始
+        outtextxy_format(80 + i * 150, 550, L"CD:%d", cooldowns[i]);
+        outtextxy_format(120 + i * 150, 550, L"伤害:%d", skills[i].dmg); // 新增技能伤害显示
     }
     // 消息
     outtextxy_format(500, 400, L"%s", msg);
@@ -97,19 +98,25 @@ void fightBossVisualAuto(
     for (int ai = 0; ai < actions.size(); ++ai) {
         const auto& act = actions[ai];
         int actBoss, actTurn, actSkill;
-        sscanf_s(act.c_str(), "Boss%d-%d-%d", &actBoss, &actTurn, &actSkill);
+        int ret = sscanf_s(act.c_str(), "Boss%d-%d-%d", &actBoss, &actTurn, &actSkill);
+        assert(ret == 3);
         if (actBoss - 1 != bossIdx) {
             bossIdx = actBoss - 1;
             bossHp = bossHps[bossIdx];
             bossMaxHp = bossHp;
             // turn 不再重置
         }
-        int dmg = skills[actSkill - 1].dmg;
+        // 不要 -1，actSkill 就是 0-based 下标
+        if (actSkill < 0 || actSkill >= skills.size()) {
+            // 错误处理，比如 continue
+            continue;
+        }
+        int dmg = skills[actSkill].dmg;
         if (dmg > bossHp) dmg = bossHp;
         bossHp -= dmg;
-        lastSkill = actSkill - 1;
+        lastSkill = actSkill;
         for (int& cd : cooldowns) if (cd > 0) cd--;
-        cooldowns[actSkill - 1] = skills[actSkill - 1].maxCd;
+        cooldowns[actSkill] = skills[actSkill].maxCd;
         ++turn;
         wchar_t buf[128];
         swprintf(buf, 128, L"回合%d：Skill%d 造成%d伤害", turn, actSkill, dmg);
@@ -120,5 +127,6 @@ void fightBossVisualAuto(
     wchar_t finalMsg[128];
     swprintf(finalMsg, 128, L"恭喜通关你用%d个回合击败了boss！", turn);
     drawBattleAuto(bossIdx, turn, totalBoss, bossHp, bossMaxHp, skills, cooldowns, -1, finalMsg, actions, actions.size());
+    system("pause");
     closegraph();
 }

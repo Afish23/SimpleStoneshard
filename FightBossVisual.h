@@ -6,7 +6,7 @@
 #include <string>
 #include <cstdio>
 #include <cstdarg>
-
+#include <assert.h>
 #include "GameObjects.h"
 
 // 自动Boss战可视化（根据最优技能顺序自动播放）
