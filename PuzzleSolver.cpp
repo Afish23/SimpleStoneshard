@@ -116,41 +116,65 @@ bool is_prime(int num) {
     return true;
 }
 
+void backtrack(std::vector<int>& path, const int fix[3], const int even_odd[3],
+    bool unique_prime, std::vector<std::vector<int>>& result) {
+    // 如果已经选了三个数字，判断是否满足最终条件
+    if (path.size() == 3) {
+        std::vector<int> cand = path;
+
+        // 检查是否都是质数且互不相同
+        if (unique_prime) {
+            if (!is_prime(cand[0]) || !is_prime(cand[1]) || !is_prime(cand[2]))
+                return;
+            std::set<int> s{cand[0], cand[1], cand[2]};
+            if (s.size() != 3) return;
+        }
+
+        result.push_back(cand);
+        return;
+    }
+
+    int pos = path.size(); // 当前要填的是第几个位置
+    for (int digit = 0; digit <= 9; ++digit) {
+        // 检查固定位约束
+        if (fix[pos] != -1 && digit != fix[pos])
+            continue;
+
+        // 检查奇偶性约束
+        if (even_odd[pos] != -2 && (digit % 2 != even_odd[pos]))
+            continue;
+
+        // 尝试选择这个数字
+        path.push_back(digit);
+        backtrack(path, fix, even_odd, unique_prime, result);
+        path.pop_back(); // 回溯
+    }
+}
+
 std::vector<std::vector<int>> generate_candidates(const std::vector<std::vector<int>>& clues) {
-    int fix[3] = { -1, -1, -1 };    // 指定位数字
-    int even_odd[3] = { -2, -2, -2 }; // -2未知，0偶，1奇
+    int fix[3] = { -1, -1, -1 };         // 指定某位固定为某个数字
+    int even_odd[3] = { -2, -2, -2 };    // -2未知，0偶，1奇
     bool unique_prime = false;
+
     for (const auto& clue : clues) {
         if (clue.size() == 2) {
-            if (clue[0] == -1 && clue[1] == -1) unique_prime = true;
-            else if (clue[1] == 0) even_odd[clue[0] - 1] = 0;
-            else if (clue[1] == 1) even_odd[clue[0] - 1] = 1;
+            if (clue[0] == -1 && clue[1] == -1)
+                unique_prime = true;
+            else if (clue[1] == 0)
+                even_odd[clue[0] - 1] = 0;
+            else if (clue[1] == 1)
+                even_odd[clue[0] - 1] = 1;
         }
         else if (clue.size() == 3) {
             for (int i = 0; i < 3; ++i)
-                if (clue[i] != -1) fix[i] = clue[i];
+                if (clue[i] != -1)
+                    fix[i] = clue[i];
         }
     }
+
     std::vector<std::vector<int>> result;
-    for (int d1 = 0; d1 <= 9; ++d1) {
-        if (fix[0] != -1 && d1 != fix[0]) continue;
-        if (even_odd[0] != -2 && (d1 % 2 != even_odd[0])) continue;
-        for (int d2 = 0; d2 <= 9; ++d2) {
-            if (fix[1] != -1 && d2 != fix[1]) continue;
-            if (even_odd[1] != -2 && (d2 % 2 != even_odd[1])) continue;
-            for (int d3 = 0; d3 <= 9; ++d3) {
-                if (fix[2] != -1 && d3 != fix[2]) continue;
-                if (even_odd[2] != -2 && (d3 % 2 != even_odd[2])) continue;
-                std::vector<int> cand = { d1, d2, d3 };
-                if (unique_prime) {
-                    if (!is_prime(d1) || !is_prime(d2) || !is_prime(d3)) continue;
-                    std::set<int> s{ d1, d2, d3 };
-                    if (s.size() != 3) continue;
-                }
-                result.push_back(cand);
-            }
-        }
-    }
+    std::vector<int> path;
+    backtrack(path, fix, even_odd, unique_prime, result);
     return result;
 }
 
