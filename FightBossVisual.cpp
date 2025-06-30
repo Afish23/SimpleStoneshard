@@ -1,10 +1,13 @@
 #include "FightBossVisual.h"
 
 // 播放每步的等待时间，单位毫秒
-const int step_sleep_ms = 1800;
-IMAGE playerImg;
+const int step_sleep_ms = 900;
+
+IMAGE playerImg, playerAttackImg;
+IMAGE bejingtu;
 const int MAX_BOSS_PIC = 5;
 IMAGE bossImgs[MAX_BOSS_PIC];
+
 // 文本输出
 void outtextxy_format(int x, int y, const wchar_t* fmt, ...) {
     wchar_t buf[256];
@@ -14,7 +17,6 @@ void outtextxy_format(int x, int y, const wchar_t* fmt, ...) {
     va_end(args);
     outtextxy(x, y, buf);
 }
-
 
 void drawSkillSequence(
     int x, int y,
@@ -49,6 +51,7 @@ void drawBattleAuto(
     int currentActionIdx
 ) {
     cleardevice();
+    putimage(0, 0, &bejingtu, SRCCOPY); // 先画背景
     setbkcolor(RGB(240, 240, 240));
     putimage(50, 350, &playerImg, SRCCOPY);
     settextcolor(BLACK);
@@ -83,13 +86,52 @@ void drawBattleAuto(
     drawSkillSequence(220, 330, actions, currentActionIdx);
 }
 
+// 动画函数：人物移动到Boss旁边并击打（支持贴靠Boss侧边）
+// 支持人物从(fromX, fromY)移动到(toX, toY)，Boss在(bossX, bossY)
+void animatePlayerAttack(int fromX, int toX, int fromY, int toY, int bossX, int bossY, int bossIdx) {
+    int steps = 20;
+    int delay = 5; // 每帧5毫秒，移动更快
+    // 1. 人物移动到boss旁边
+    for (int i = 0; i <= steps; ++i) {
+        cleardevice();
+        putimage(0, 0, &bejingtu, SRCCOPY); // 加背景
+        // Boss图
+        if (bossIdx >= 0 && bossIdx < MAX_BOSS_PIC)
+            putimage(bossX, bossY, &bossImgs[bossIdx], SRCCOPY);
+        // 人物
+        int px = fromX + (toX - fromX) * i / steps;
+        int py = fromY + (toY - fromY) * i / steps;
+        putimage(px, py, &playerImg, SRCCOPY);
+        FlushBatchDraw();
+        Sleep(delay);
+    }
+    // 2. 攻击动作
+    cleardevice();
+    putimage(0, 0, &bejingtu, SRCCOPY); // 加背景
+    if (bossIdx >= 0 && bossIdx < MAX_BOSS_PIC)
+        putimage(bossX, bossY, &bossImgs[bossIdx], SRCCOPY);
+    putimage(toX, toY, &playerAttackImg, SRCCOPY);
+    FlushBatchDraw();
+    Sleep(300); // 攻击动作停顿300毫秒
+
+    // 3. 恢复站立
+    cleardevice();
+    putimage(0, 0, &bejingtu, SRCCOPY); // 加背景
+    if (bossIdx >= 0 && bossIdx < MAX_BOSS_PIC)
+        putimage(bossX, bossY, &bossImgs[bossIdx], SRCCOPY);
+    putimage(toX, toY, &playerImg, SRCCOPY);
+    FlushBatchDraw();
+    Sleep(100); // 站立停顿
+}
+
 void fightBossVisualAuto(
-    const vector<int>& bossHps,
-    const vector<Skill>& skills,
-    const vector<string>& actions
+    const std::vector<int>& bossHps,
+    const std::vector<Skill>& skills,
+    const std::vector<std::string>& actions
 ) {
-    
-    loadimage(&playerImg, L"player.png", 150, 150);  // 第二三参数可调节为你想要的宽高
+    loadimage(&playerImg, L"player.png", 150, 150);
+    loadimage(&playerAttackImg, L"player_attack.png", 150, 150);
+
     // 加载Boss图片
     for (int i = 0; i < MAX_BOSS_PIC; ++i) {
         wchar_t filename[32];
@@ -97,14 +139,16 @@ void fightBossVisualAuto(
         loadimage(&bossImgs[i], filename, 150, 150);   // 可根据实际需要调整宽高
     }
     initgraph(800, 600);
-    setbkcolor(RGB(240, 240, 240));
+    loadimage(&bejingtu, L"bejing.png", 800, 600); // 800x600为窗口大小
     cleardevice();
+    putimage(0, 0, &bejingtu, SRCCOPY);
+
     int totalBoss = bossHps.size();
     int bossIdx = 0;
     int bossHp = bossHps[0];
     int bossMaxHp = bossHps[0];
     int turn = 0;
-    vector<int> cooldowns(skills.size(), 0);
+    std::vector<int> cooldowns(skills.size(), 0);
     int lastSkill = -1;
 
     for (int ai = 0; ai < actions.size(); ++ai) {
@@ -132,6 +176,19 @@ void fightBossVisualAuto(
         ++turn;
         wchar_t buf[128];
         swprintf(buf, 128, L"回合%d：Skill%d 造成%d伤害", turn, actSkill, dmg);
+
+        // --- 动画：人物移动到Boss旁边并击打 ---
+        // 以图片宽150为例，人物Y与boss顶端对齐
+        int playerW = 150, playerH = 150;
+        int bossW = 150, bossH = 150;
+        int bossX = 500, bossY = 100;
+        int playerStartX = 50, playerStartY = 350;
+        int playerEndX = bossX - playerW;
+        int playerEndY = bossY;
+
+        animatePlayerAttack(playerStartX, playerEndX, playerStartY, playerEndY, bossX, bossY, bossIdx);
+
+        // --- 刷新战斗界面 ---
         drawBattleAuto(bossIdx, turn, totalBoss, bossHp, bossMaxHp, skills, cooldowns, lastSkill, buf, actions, ai);
         std::this_thread::sleep_for(std::chrono::milliseconds(step_sleep_ms));
     }

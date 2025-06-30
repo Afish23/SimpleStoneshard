@@ -172,12 +172,14 @@
     <None Include="maze.json" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="bejing.png" />
     <Image Include="boss1.png" />
     <Image Include="boss2.png" />
     <Image Include="boss3.png" />
     <Image Include="boss4.png" />
     <Image Include="boss5.png" />
     <Image Include="player.png" />
+    <Image Include="player_attack.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
