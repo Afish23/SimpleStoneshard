@@ -61,9 +61,6 @@ int main() {
                 cout << "请输入终止点坐标（x y形式，大于0，小于n - 1）：";
                 cin >> exitPos.first >> exitPos.second;
             }
-            cin.ignore();
-            cin.get();
-            system("cls");
 
             auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
             cout << "\n生成的迷宫如下：\n";
