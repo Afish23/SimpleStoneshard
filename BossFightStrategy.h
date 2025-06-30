@@ -1,28 +1,28 @@
-#pragma once
+ï»¿#pragma once
 #include <vector>
 #include <string>
 #include<tuple>
 #include "GameObjects.h"
 using namespace std;
 
-// ×´Ì¬½Úµã
+// çŠ¶æ€èŠ‚ç‚¹
 struct State {
-    int bossIdx;                 // µ±Ç°BOSS±àºÅ
-    int bossHp;                  // µ±Ç°BOSSÊ£ÓàÑªÁ¿
-    int turn;                    // ×ÜÓÃ»ØºÏÊı
-    vector<int> cooldowns;       // ¼¼ÄÜÀäÈ´
-    vector<string> actions;      // ¼¼ÄÜĞòÁĞ
+    int bossIdx;                 // å½“å‰BOSSç¼–å·
+    int bossHp;                  // å½“å‰BOSSå‰©ä½™è¡€é‡
+    int turn;                    // æ€»ç”¨å›åˆæ•°
+    vector<int> cooldowns;       // æŠ€èƒ½å†·å´
+    vector<string> actions;      // æŠ€èƒ½åºåˆ—
 
     bool operator<(const State& rhs) const {
-        // ÓÃÓÚset/mapÅĞÖØ
+        // ç”¨äºset/mapåˆ¤é‡
         return tie(bossIdx, bossHp, cooldowns) < tie(rhs.bossIdx, rhs.bossHp, rhs.cooldowns);
     }
 };
 
 class BossFightStrategy {
 public:
-    // ÊäÈë£ºBossÑªÁ¿ÁĞ±í¡¢Íæ¼Ò¼¼ÄÜ
-    // Êä³ö£º×îĞ¡»ØºÏÊıÏÂµÄ¼¼ÄÜÊÍ·ÅĞòÁĞ
+    // è¾“å…¥ï¼šBossè¡€é‡åˆ—è¡¨ã€ç©å®¶æŠ€èƒ½
+    // è¾“å‡ºï¼šæœ€å°å›åˆæ•°ä¸‹çš„æŠ€èƒ½é‡Šæ”¾åºåˆ—
     static pair<int, vector<string>> minTurnSkillSequence(
         const vector<int>& bossHps,
         const vector<Skill>& skills
