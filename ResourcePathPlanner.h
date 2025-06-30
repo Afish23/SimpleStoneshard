@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "MazeGenerator.h"
 #include <vector>
 #include <utility>
@@ -18,7 +18,7 @@ public:
         std::pair<int, int> start,
         std::pair<int, int> exit);
 
-    static std::vector<std::vector<char>> markPath(
+    static std::vector<std::vector<MazeCell>> markPath(
         const std::vector<std::vector<MazeCell>>& originalMaze,
         const std::vector<std::pair<int, int>>& path);
 
