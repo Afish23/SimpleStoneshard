@@ -63,7 +63,6 @@ int main() {
             }
 
             auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
-
             cout << "\n生成的迷宫如下：\n";
             MazeGenerator::printMaze(maze);
             MazeGenerator::writeMazeToJson(maze, "maze.json");
