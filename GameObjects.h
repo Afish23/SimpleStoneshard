@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <iostream>
 #include <set>
 #include <utility>
@@ -22,7 +22,7 @@ public:
     int dmg;
     int maxCd;
     int curCd;
-    Skill (int dmg = 0, int maxCd = 0);
+    Skill(int dmg = 0, int maxCd = 0);
 };
 
 class Player : public GameObject {
