@@ -62,6 +62,7 @@ int main() {
 
             cout << "\n生成的迷宫如下：\n";
             MazeGenerator::printMaze(maze);
+            MazeGenerator::writeMazeToJson(maze, "maze.json");
 
             // 写入json文件
             MazeGenerator::writeMazeToJson(maze, "maze.json");
