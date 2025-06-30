@@ -51,12 +51,16 @@ int main() {
             int trapCount = max(1, n / 5);
             int lockerCount = max(1, n / 6);
             int bossCount = 1;
-
+            int flag = 0;
             pair<int, int> startPos, exitPos;
-            cout << "请输入初始点坐标（x y形式，大于0，小于n - 1）：";
-            cin >> startPos.first >> startPos.second;
-            cout << "请输入终止点坐标（x y形式，大于0，小于n - 1）：";
-            cin >> exitPos.first >> exitPos.second;
+            cout << "是否手动指定起点和终点？（0：否 1：是 ）" << endl;
+            cin >> flag;
+            if (flag == 1) {
+                cout << "请输入初始点坐标（x y形式，大于0，小于n - 1）：";
+                cin >> startPos.first >> startPos.second;
+                cout << "请输入终止点坐标（x y形式，大于0，小于n - 1）：";
+                cin >> exitPos.first >> exitPos.second;
+            }
 
             auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
 
