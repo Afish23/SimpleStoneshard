@@ -1,9 +1,14 @@
 #include "FightBossVisual.h"
 
-// æ’­æ”¾æ¯æ­¥çš„ç­‰å¾…æ—¶é—´ï¼Œå•ä½æ¯«ç§’
-const int step_sleep_ms = 1800;
+// ²¥·ÅÃ¿²½µÄµÈ´ıÊ±¼ä£¬µ¥Î»ºÁÃë
+const int step_sleep_ms = 900;
 
-// æ–‡æœ¬è¾“å‡º
+IMAGE playerImg, playerAttackImg;
+IMAGE bejingtu;
+const int MAX_BOSS_PIC = 5;
+IMAGE bossImgs[MAX_BOSS_PIC];
+
+// ÎÄ±¾Êä³ö
 void outtextxy_format(int x, int y, const wchar_t* fmt, ...) {
     wchar_t buf[256];
     va_list args;
@@ -13,7 +18,6 @@ void outtextxy_format(int x, int y, const wchar_t* fmt, ...) {
     outtextxy(x, y, buf);
 }
 
-
 void drawSkillSequence(
     int x, int y,
     const std::vector<std::string>& actions,
@@ -22,23 +26,23 @@ void drawSkillSequence(
     settextcolor(BLACK);
     settextstyle(18, 0, L"Consolas");
 
-    outtextxy(x, 10, L"æˆ˜æ–—æ—¥å¿—ï¼š"); // æœ€é¡¶éƒ¨ï¼Œy=10
+    outtextxy(x, 10, L"Õ½¶·ÈÕÖ¾£º"); // ×î¶¥²¿£¬y=10
 
     int startIdx = 0;
     int endIdx = currentIdx;
     for (int i = startIdx; i <= endIdx && i < actions.size(); ++i) {
         if (i < endIdx)
-            settextcolor(RGB(120, 120, 120));  // å·²é‡Šæ”¾
+            settextcolor(RGB(120, 120, 120));  // ÒÑÊÍ·Å
         else if (i == endIdx)
-            settextcolor(RGB(255, 69, 0));     // å½“å‰
+            settextcolor(RGB(255, 69, 0));     // µ±Ç°
         wchar_t stepbuf[64];
         swprintf(stepbuf, 64, L"%2d. %hs", i + 1, actions[i].c_str());
-        outtextxy(x, 38 + (i - startIdx) * 22, stepbuf); // ä»38å¼€å§‹ï¼Œé€è¡Œå‘ä¸‹
+        outtextxy(x, 38 + (i - startIdx) * 22, stepbuf); // ´Ó38¿ªÊ¼£¬ÖğĞĞÏòÏÂ
     }
 }
 
-// å¯è§†åŒ–ç»˜åˆ¶æˆ˜æ–—ï¼ˆè‡ªåŠ¨æ¨¡å¼ï¼Œå¢åŠ æŠ€èƒ½åºåˆ—æ˜¾ç¤ºï¼‰
-// æ–°å¢ actions, currentActionIdx å‚æ•°
+// ¿ÉÊÓ»¯»æÖÆÕ½¶·£¨×Ô¶¯Ä£Ê½£¬Ôö¼Ó¼¼ÄÜĞòÁĞÏÔÊ¾£©
+// ĞÂÔö actions, currentActionIdx ²ÎÊı
 void drawBattleAuto(
     int bossIdx, int turn, int totalBoss, int bossHp, int bossMaxHp,
     const std::vector<Skill>& skills, const std::vector<int>& cooldowns,
@@ -47,78 +51,151 @@ void drawBattleAuto(
     int currentActionIdx
 ) {
     cleardevice();
+    putimage(0, 0, &bejingtu, SRCCOPY); // ÏÈ»­±³¾°
     setbkcolor(RGB(240, 240, 240));
-    setfillcolor(RGB(30, 144, 255));
-    fillrectangle(50, 350, 200, 500);
+    putimage(50, 350, &playerImg, SRCCOPY);
     settextcolor(BLACK);
     settextstyle(20, 0, L"Consolas");
-    outtextxy_format(50, 330, L"Player (è‡ªåŠ¨)");
+    outtextxy_format(50, 330, L"Player (×Ô¶¯)");
 
-    setfillcolor(RGB(178, 34, 34));
-    fillrectangle(500, 100, 650, 250);
+    // BossÍ¼Æ¬
+    int bossPicIdx = bossIdx;
+    if (bossPicIdx >= 0 && bossPicIdx < MAX_BOSS_PIC) {
+        putimage(500, 100, &bossImgs[bossPicIdx], SRCCOPY);
+    }
     outtextxy_format(500, 80, L"Boss %d/%d", bossIdx + 1, totalBoss);
 
-    // bossè¡€æ¡
+    // BossÑªÌõÏÂÒÆ
     setfillcolor(GREEN);
     int showHp = bossHp > 0 ? bossHp : 0;
-    fillrectangle(500, 60, 500 + showHp * 2, 80);
-    outtextxy_format(500, 40, L"HP:%d/%d", showHp, bossMaxHp);
+    fillrectangle(500, 260, 500 + showHp * 2, 280);
+    outtextxy_format(500, 240, L"HP:%d/%d", showHp, bossMaxHp);
 
-    // æŠ€èƒ½æŒ‰é’®/å†·å´
+    // ¼¼ÄÜ°´Å¥/ÀäÈ´/ÉËº¦£¬±àºÅ´Ó0¿ªÊ¼
     for (int i = 0; i < skills.size(); ++i) {
-        setfillcolor(lastSkill == i ? RGB(255, 215, 0) : LIGHTGRAY); // ä¸Šä¸€æ­¥æŠ€èƒ½é«˜äº®
+        setfillcolor(lastSkill == i ? RGB(255, 215, 0) : LIGHTGRAY); // ÉÏÒ»²½¼¼ÄÜ¸ßÁÁ
         fillrectangle(50 + i * 150, 520, 200 + i * 150, 570);
-        outtextxy_format(60 + i * 150, 530, L"Skill%d", i + 1);
-        outtextxy_format(60 + i * 150, 550, L"CD:%d", cooldowns[i]);
+        outtextxy_format(100 + i * 150, 530, L"Skill%d", i); // ¼¼ÄÜ±àºÅ´Ó0¿ªÊ¼
+        outtextxy_format(80 + i * 150, 550, L"CD:%d", cooldowns[i]);
+        outtextxy_format(120 + i * 150, 550, L"ÉËº¦:%d", skills[i].dmg); // ĞÂÔö¼¼ÄÜÉËº¦ÏÔÊ¾
     }
-    // æ¶ˆæ¯
+    // ÏûÏ¢
     outtextxy_format(500, 400, L"%s", msg);
 
-    // ------ æŠ€èƒ½åºåˆ— ------
+    // ------ ¼¼ÄÜĞòÁĞ ------
     drawSkillSequence(220, 330, actions, currentActionIdx);
 }
 
-void fightBossVisualAuto(
-    const vector<int>& bossHps,
-    const vector<Skill>& skills,
-    const vector<string>& actions
-) {
-    initgraph(800, 600);
-    setbkcolor(RGB(240, 240, 240));
+// ¶¯»­º¯Êı£ºÈËÎïÒÆ¶¯µ½BossÅÔ±ß²¢»÷´ò£¨Ö§³ÖÌù¿¿Boss²à±ß£©
+// Ö§³ÖÈËÎï´Ó(fromX, fromY)ÒÆ¶¯µ½(toX, toY)£¬BossÔÚ(bossX, bossY)
+void animatePlayerAttack(int fromX, int toX, int fromY, int toY, int bossX, int bossY, int bossIdx) {
+    int steps = 20;
+    int delay = 5; // Ã¿Ö¡5ºÁÃë£¬ÒÆ¶¯¸ü¿ì
+    // 1. ÈËÎïÒÆ¶¯µ½bossÅÔ±ß
+    for (int i = 0; i <= steps; ++i) {
+        cleardevice();
+        putimage(0, 0, &bejingtu, SRCCOPY); // ¼Ó±³¾°
+        // BossÍ¼
+        if (bossIdx >= 0 && bossIdx < MAX_BOSS_PIC)
+            putimage(bossX, bossY, &bossImgs[bossIdx], SRCCOPY);
+        // ÈËÎï
+        int px = fromX + (toX - fromX) * i / steps;
+        int py = fromY + (toY - fromY) * i / steps;
+        putimage(px, py, &playerImg, SRCCOPY);
+        FlushBatchDraw();
+        Sleep(delay);
+    }
+    // 2. ¹¥»÷¶¯×÷
     cleardevice();
+    putimage(0, 0, &bejingtu, SRCCOPY); // ¼Ó±³¾°
+    if (bossIdx >= 0 && bossIdx < MAX_BOSS_PIC)
+        putimage(bossX, bossY, &bossImgs[bossIdx], SRCCOPY);
+    putimage(toX, toY, &playerAttackImg, SRCCOPY);
+    FlushBatchDraw();
+    Sleep(300); // ¹¥»÷¶¯×÷Í£¶Ù300ºÁÃë
+
+    // 3. »Ö¸´Õ¾Á¢
+    cleardevice();
+    putimage(0, 0, &bejingtu, SRCCOPY); // ¼Ó±³¾°
+    if (bossIdx >= 0 && bossIdx < MAX_BOSS_PIC)
+        putimage(bossX, bossY, &bossImgs[bossIdx], SRCCOPY);
+    putimage(toX, toY, &playerImg, SRCCOPY);
+    FlushBatchDraw();
+    Sleep(100); // Õ¾Á¢Í£¶Ù
+}
+
+void fightBossVisualAuto(
+    const std::vector<int>& bossHps,
+    const std::vector<Skill>& skills,
+    const std::vector<std::string>& actions
+) {
+    loadimage(&playerImg, L"player.png", 150, 150);
+    loadimage(&playerAttackImg, L"player_attack.png", 150, 150);
+
+    // ¼ÓÔØBossÍ¼Æ¬
+    for (int i = 0; i < MAX_BOSS_PIC; ++i) {
+        wchar_t filename[32];
+        swprintf(filename, 32, L"boss%d.png", i + 1); // boss1.png, boss2.png, ...
+        loadimage(&bossImgs[i], filename, 150, 150);   // ¿É¸ù¾İÊµ¼ÊĞèÒªµ÷Õû¿í¸ß
+    }
+    initgraph(800, 600);
+    loadimage(&bejingtu, L"bejing.png", 800, 600); // 800x600Îª´°¿Ú´óĞ¡
+    cleardevice();
+    putimage(0, 0, &bejingtu, SRCCOPY);
+
     int totalBoss = bossHps.size();
     int bossIdx = 0;
     int bossHp = bossHps[0];
     int bossMaxHp = bossHps[0];
     int turn = 0;
-    vector<int> cooldowns(skills.size(), 0);
+    std::vector<int> cooldowns(skills.size(), 0);
     int lastSkill = -1;
 
     for (int ai = 0; ai < actions.size(); ++ai) {
         const auto& act = actions[ai];
         int actBoss, actTurn, actSkill;
-        sscanf_s(act.c_str(), "Boss%d-%d-%d", &actBoss, &actTurn, &actSkill);
+        int ret = sscanf_s(act.c_str(), "Boss%d-%d-%d", &actBoss, &actTurn, &actSkill);
+        assert(ret == 3);
         if (actBoss - 1 != bossIdx) {
             bossIdx = actBoss - 1;
             bossHp = bossHps[bossIdx];
             bossMaxHp = bossHp;
-            // turn ä¸å†é‡ç½®
+            // turn ²»ÔÙÖØÖÃ
         }
-        int dmg = skills[actSkill - 1].dmg;
+        // ²»Òª -1£¬actSkill ¾ÍÊÇ 0-based ÏÂ±ê
+        if (actSkill < 0 || actSkill >= skills.size()) {
+            // ´íÎó´¦Àí£¬±ÈÈç continue
+            continue;
+        }
+        int dmg = skills[actSkill].dmg;
         if (dmg > bossHp) dmg = bossHp;
         bossHp -= dmg;
-        lastSkill = actSkill - 1;
+        lastSkill = actSkill;
         for (int& cd : cooldowns) if (cd > 0) cd--;
-        cooldowns[actSkill - 1] = skills[actSkill - 1].maxCd;
+        cooldowns[actSkill] = skills[actSkill].maxCd;
         ++turn;
         wchar_t buf[128];
-        swprintf(buf, 128, L"å›åˆ%dï¼šSkill%d é€ æˆ%dä¼¤å®³", turn, actSkill, dmg);
+        swprintf(buf, 128, L"»ØºÏ%d£ºSkill%d Ôì³É%dÉËº¦", turn, actSkill, dmg);
+
+        // --- ¶¯»­£ºÈËÎïÒÆ¶¯µ½BossÅÔ±ß²¢»÷´ò ---
+        // ÒÔÍ¼Æ¬¿í150ÎªÀı£¬ÈËÎïYÓëboss¶¥¶Ë¶ÔÆë
+        int playerW = 150, playerH = 150;
+        int bossW = 150, bossH = 150;
+        int bossX = 500, bossY = 100;
+        int playerStartX = 50, playerStartY = 350;
+        int playerEndX = bossX - playerW;
+        int playerEndY = bossY;
+
+        animatePlayerAttack(playerStartX, playerEndX, playerStartY, playerEndY, bossX, bossY, bossIdx);
+
+        // --- Ë¢ĞÂÕ½¶·½çÃæ ---
         drawBattleAuto(bossIdx, turn, totalBoss, bossHp, bossMaxHp, skills, cooldowns, lastSkill, buf, actions, ai);
         std::this_thread::sleep_for(std::chrono::milliseconds(step_sleep_ms));
     }
-    // æ€»å›åˆæ•°æç¤º
+    // ×Ü»ØºÏÊıÌáÊ¾
     wchar_t finalMsg[128];
-    swprintf(finalMsg, 128, L"æ­å–œé€šå…³ä½ ç”¨%dä¸ªå›åˆå‡»è´¥äº†bossï¼", turn);
+    swprintf(finalMsg, 128, L"¹§Ï²Í¨¹ØÄãÓÃ%d¸ö»ØºÏ»÷°ÜÁËboss£¡", turn);
     drawBattleAuto(bossIdx, turn, totalBoss, bossHp, bossMaxHp, skills, cooldowns, -1, finalMsg, actions, actions.size());
+    system("pause");
     closegraph();
 }
