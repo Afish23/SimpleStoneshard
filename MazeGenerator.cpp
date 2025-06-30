@@ -1,6 +1,8 @@
 ﻿#include "MazeGenerator.h"
 
 using json = nlohmann::json;
+
+const int MAX_PATH_WIDTH = 1; // 设为1则强制单宽度路径
 vector<vector<MazeCell>> MazeGenerator::generateMaze(int size,
     int goldCount,
     int trapCount,
@@ -47,25 +49,63 @@ vector<vector<MazeCell>> MazeGenerator::generateMaze(int size,
 
 void MazeGenerator::divide(vector<vector<MazeCell>>& maze, int x1, int y1, int x2, int y2) {
     if (x2 - x1 < 2 || y2 - y1 < 2) return;
-    bool horizontal = (rand() % 2 == 0);
+
+    // 使用现代随机数生成器
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+
+    // 确定分割方向（水平或垂直）
+    bool horizontal;
+    if (x2 - x1 > y2 - y1) {
+        horizontal = true;
+    }
+    else if (y2 - y1 > x2 - x1) {
+        horizontal = false;
+    }
+    else {
+        std::uniform_int_distribution<> dist(0, 1);
+        horizontal = (dist(gen) == 0);
+    }
 
     if (horizontal) {
-        int split_row = x1 + 1 + rand() % (x2 - x1 - 1);
-        int door_col = y1 + rand() % (y2 - y1 + 1);
+        // 确保分割线在奇数位置（防止宽路径形成）
+        std::uniform_int_distribution<> dist_row(x1 + 1, x2 - 1);
+        int split_row = dist_row(gen);
+        if ((split_row - x1) % 2 == 0) split_row = (split_row < x2 - 1) ? split_row + 1 : split_row - 1;
+
+        // 确保门位置在偶数位置
+        std::uniform_int_distribution<> dist_col(y1, y2);
+        int door_col = dist_col(gen);
+        if ((door_col - y1) % 2 != 0) door_col = (door_col < y2) ? door_col + 1 : door_col - 1;
+
+        // 创建分割墙（留出门位置）
         for (int col = y1; col <= y2; col++) {
             if (col == door_col) continue;
             maze[split_row][col].type = WALL;
         }
+
+        // 递归处理子区域
         divide(maze, x1, y1, split_row - 1, y2);
         divide(maze, split_row + 1, y1, x2, y2);
     }
     else {
-        int split_col = y1 + 1 + rand() % (y2 - y1 - 1);
-        int door_row = x1 + rand() % (x2 - x1 + 1);
+        // 确保分割线在奇数位置（防止宽路径形成）
+        std::uniform_int_distribution<> dist_col(y1 + 1, y2 - 1);
+        int split_col = dist_col(gen);
+        if ((split_col - y1) % 2 == 0) split_col = (split_col < y2 - 1) ? split_col + 1 : split_col - 1;
+
+        // 确保门位置在偶数位置
+        std::uniform_int_distribution<> dist_row(x1, x2);
+        int door_row = dist_row(gen);
+        if ((door_row - x1) % 2 != 0) door_row = (door_row < x2) ? door_row + 1 : door_row - 1;
+
+        // 创建分割墙（留出门位置）
         for (int row = x1; row <= x2; row++) {
             if (row == door_row) continue;
             maze[row][split_col].type = WALL;
         }
+
+        // 递归处理子区域
         divide(maze, x1, y1, x2, split_col - 1);
         divide(maze, x1, split_col + 1, x2, y2);
     }
@@ -145,18 +185,5 @@ void MazeGenerator::printMaze(const vector<vector<MazeCell>>& maze) {
     }    
 }
 
-// 工厂函数，根据字符生成对象
-//shared_ptr<GameObject> MazeGenerator::createObject(char c, int x, int y) {
-//    switch (c) {
-//    case '#': return make_shared<GameObject>(x, y, '#'); // 墙
-//    case 'S': return make_shared<Player>(x, y); // 玩家
-//    case 'E': return make_shared<GameObject>(x, y, 'E'); // 出口（你可以新建 Exit 类）
-//    case ' ': return make_shared<GameObject>(x, y, ' '); // 通道
-//    case 'B': return make_shared<GameObject>(x, y, 'B');  // Boss
-//    case 'G': return make_shared<Gold>(x, y);         // 金币
-//    case 'T': return make_shared<Track>(x, y);        // 陷阱
-//    case 'L': return make_shared<Locker>(x, y);       // 宝箱
-//    default:  return nullptr;
-//    }
-//}
+
 
