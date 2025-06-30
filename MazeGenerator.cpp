@@ -142,7 +142,7 @@ void MazeGenerator::printMaze(const vector<vector<MazeCell>>& maze) {
         for (int j = 0; j < n; j++)
             cout << maze[i][j].type << " ";
         cout << endl;
-    }    MazeGenerator::writeMazeToJson(maze, "maze.json");
+    }    
 }
 
 // 工厂函数，根据字符生成对象
