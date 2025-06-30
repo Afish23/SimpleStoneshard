@@ -2,7 +2,9 @@
 
 // 播放每步的等待时间，单位毫秒
 const int step_sleep_ms = 1800;
-
+IMAGE playerImg;
+const int MAX_BOSS_PIC = 5;
+IMAGE bossImgs[MAX_BOSS_PIC];
 // 文本输出
 void outtextxy_format(int x, int y, const wchar_t* fmt, ...) {
     wchar_t buf[256];
@@ -48,21 +50,23 @@ void drawBattleAuto(
 ) {
     cleardevice();
     setbkcolor(RGB(240, 240, 240));
-    setfillcolor(RGB(30, 144, 255));
-    fillrectangle(50, 350, 200, 500);
+    putimage(50, 350, &playerImg, SRCCOPY);
     settextcolor(BLACK);
     settextstyle(20, 0, L"Consolas");
     outtextxy_format(50, 330, L"Player (自动)");
 
-    setfillcolor(RGB(178, 34, 34));
-    fillrectangle(500, 100, 650, 250);
+    // Boss图片
+    int bossPicIdx = bossIdx;
+    if (bossPicIdx >= 0 && bossPicIdx < MAX_BOSS_PIC) {
+        putimage(500, 100, &bossImgs[bossPicIdx], SRCCOPY);
+    }
     outtextxy_format(500, 80, L"Boss %d/%d", bossIdx + 1, totalBoss);
 
-    // boss血条
+    // Boss血条下移
     setfillcolor(GREEN);
     int showHp = bossHp > 0 ? bossHp : 0;
-    fillrectangle(500, 60, 500 + showHp * 2, 80);
-    outtextxy_format(500, 40, L"HP:%d/%d", showHp, bossMaxHp);
+    fillrectangle(500, 260, 500 + showHp * 2, 280);
+    outtextxy_format(500, 240, L"HP:%d/%d", showHp, bossMaxHp);
 
     // 技能按钮/冷却/伤害，编号从0开始
     for (int i = 0; i < skills.size(); ++i) {
@@ -84,6 +88,14 @@ void fightBossVisualAuto(
     const vector<Skill>& skills,
     const vector<string>& actions
 ) {
+    
+    loadimage(&playerImg, L"player.png", 150, 150);  // 第二三参数可调节为你想要的宽高
+    // 加载Boss图片
+    for (int i = 0; i < MAX_BOSS_PIC; ++i) {
+        wchar_t filename[32];
+        swprintf(filename, 32, L"boss%d.png", i + 1); // boss1.png, boss2.png, ...
+        loadimage(&bossImgs[i], filename, 150, 150);   // 可根据实际需要调整宽高
+    }
     initgraph(800, 600);
     setbkcolor(RGB(240, 240, 240));
     cleardevice();
