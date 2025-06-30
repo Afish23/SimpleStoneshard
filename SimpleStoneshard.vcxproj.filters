@@ -76,5 +76,34 @@
     <None Include="maze.json">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="pwd_000.json">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="bejing.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="boss1.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="boss2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="boss3.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="boss4.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="boss5.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="player.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="player_attack.png">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>
