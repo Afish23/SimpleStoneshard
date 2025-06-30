@@ -64,7 +64,7 @@ pair<int, vector<string>> BossFightStrategy::minTurnSkillSequence(
                 // 冷却推进
                 for (int& cd : ns.cooldowns) if (cd > 0) cd--;
                 ns.cooldowns[i] = skills[i].maxCd;
-                ns.actions.push_back("Boss" + to_string(ns.bossIdx + 1) + "-" + to_string(ns.turn) + "-" + to_string(i + 1));
+                ns.actions.push_back("Boss" + to_string(ns.bossIdx + 1) + "-" + to_string(ns.turn) + "-" + to_string(i));
                 // Boss被击败，进入下一个
                 if (ns.bossHp == 0) {
                     ns.bossIdx += 1;

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <iostream>
 #include <set>
 #include <utility>
@@ -22,7 +22,7 @@ public:
     int dmg;
     int maxCd;
     int curCd;
-    Skill (int dmg = 0, int maxCd = 0);
+    Skill(int dmg = 0, int maxCd = 0);
 };
 
 class Player : public GameObject {
@@ -30,12 +30,6 @@ public:
     vector<Skill> skills;
     Player(int x = 0, int y = 0);
     void move(int dx, int dy);
-    void addGold(int amount);
-    void takeDamage(int dmg);
-    void heal(int amount);
-    // Íæ¼ÒÆÕ¹¥¼¼ÄÜ
-    void normalAttack(class Boss& boss);
-    void getPosition();
     void addSkill(const Skill& skill);
 };
 
@@ -44,7 +38,6 @@ public:
     int hp;
     int goldDrop;
     bool defeated;
-    // Ö»ÉùÃ÷£¬²»ÊµÏÖ
     Boss( int hp = 200);
     void takeDamage(int dmg);
     bool isAlive() const;
