@@ -4,14 +4,41 @@
 #include "MazeGenerator.h"
 #include "PuzzleSolver.h"
 #include "ResourcePathPlanner.h"
-#include"FightBossVisual.h"
+#include "FightBossVisual.h"
 #include "Utils.h"
+#include "Visualizer.h"
 #include <iostream>
 #include <fstream>
 #include <memory>
 #include <vector>
 #include <cstdlib>
+#include <sstream>
+#include <filesystem>
+#include <cstdint>
+#include <functional>
 using namespace std;
+
+// json头文件，如果你用nlohmann::json
+#include "json.hpp"
+using json = nlohmann::json;
+
+// Boss战回调，主控弹窗并分数递减
+int totalScore = 0; // 全局分数
+
+struct GameState {
+    int totalScore = 0;
+    bool bossDefeated = false;
+} gameState;
+
+
+
+void bossFightCallback(vector<vector<MazeCell>>& maze, pair<int, int>& playerPos) {
+    if (maze[playerPos.first][playerPos.second].type == 'B') {
+        triggerBossFight(maze, playerPos, totalScore, false);
+        // 更新迷宫状态
+        maze[playerPos.first][playerPos.second].type = ' ';
+    }
+}
 
 int main() {
     srand(time(0));
@@ -38,7 +65,7 @@ int main() {
                 continue;
             }
 
-            int goldCount = max(1, n / 4);
+            int goldCount = max(1, n / 2);
             int trapCount = max(1, n / 5);
             int lockerCount = max(1, n / 6);
             int bossCount = 1;
@@ -54,23 +81,18 @@ int main() {
             }
 
             auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
-
             cout << "\n生成的迷宫如下：\n";
             MazeGenerator::printMaze(maze);
             MazeGenerator::writeMazeToJson(maze, "maze.json");
 
-            // 写入json文件
-            MazeGenerator::writeMazeToJson(maze, "maze.json");
             cout << "已保存到 maze.json\n";
             cout << "按回车键返回主界面...";
             cin.ignore();
             cin.get();
             system("cls");
-            
         }
         else if (choice == 2) {
-            pair<int, int> startPos, exitPos;//起止点坐标对
-            // 读取json并实例化对象
+            pair<int, int> startPos, exitPos;
             ifstream fin("maze.json");
             if (!fin) {
                 cerr << "无法打开maze.json文件" << endl;
@@ -82,117 +104,137 @@ int main() {
             }
             json j;
             fin >> j;
-            fin.close(); // 读取后关闭文件
+            fin.close();
             auto maze_arr = j["maze"];
             int nn = maze_arr.size();
             int m = maze_arr[0].size();
             int start_x, start_y, end_x, end_y;
 
-            vector<vector<MazeCell>> maze_objs(nn, vector<MazeCell>(m));
-            // 填充迷宫数据
+            // 创建初始迷宫对象
+            vector<vector<MazeCell>> initialMaze(nn, vector<MazeCell>(m));
             for (int i = 0; i < nn; ++i) {
                 for (int j2 = 0; j2 < m; ++j2) {
                     char c = maze_arr[i][j2].get<string>()[0];
-                    maze_objs[i][j2].type = c;  // 直接设置单元格类型
+                    initialMaze[i][j2].type = c;
                     switch (c) {
-                    case 'S':  // 起点
+                    case 'S':
                         start_x = i;
                         start_y = j2;
                         break;
-
-                    case 'E':  // 终点
+                    case 'E':
                         end_x = i;
                         end_y = j2;
                         break;
-
-                    default:   // 其他情况无需操作
+                    default:
                         break;
                     }
                 }
             }
 
-            // 输出可视化
             cout << "读取到的迷宫如下：\n";
             for (int i = 0; i < nn; ++i) {
                 for (int j2 = 0; j2 < m; ++j2) {
-                    cout << maze_objs[i][j2].type << ' ';  // 直接访问单元格类型
+                    cout << initialMaze[i][j2].type << ' ';
                 }
                 cout << endl;
             }
-            /*cout << start_x << ',' << start_y << endl;
-            cout << end_x << ',' << end_y << endl;
-            cout << goldCount << endl;
-            cout << trapCount << endl;
-            cout << lockerCount << endl;*/
 
             startPos.first = start_x;
             startPos.second = start_y;
             exitPos.first = end_x;
             exitPos.second = end_y;
 
-            auto result = ResourcePathPlanner::findOptimalPath(maze_objs, startPos, exitPos);
+            // 复制一份迷宫用于动态规划
+            auto dpMaze = initialMaze;
+            auto greedyMaze = initialMaze;  // 创建全新的副本
+            auto result = ResourcePathPlanner::findOptimalPath(dpMaze, startPos, exitPos);
 
             if (result.success) {
                 cout << "\n找到最优路径！总价值: " << result.totalValue << endl;
 
-                // 可视化显示
-                auto markedMaze = ResourcePathPlanner::markPath(maze_objs, result.path);
-                cout << "\n路径标记图 (* 表示路径):\n";
-                MazeGenerator::printMaze(markedMaze);
+                // 可视化DP最优路径 - 使用初始迷宫
+                MazeVisualizer vis1(initialMaze.size());
+                vis1.drawMaze(initialMaze);  // 这里确保使用初始迷宫
+                vis1.animatePath(result.path, initialMaze, 120, COLOR_PATH);  // 这里也使用初始迷宫
 
-                // 输出路径坐标
-                cout << "\n路径点序列:\n";
-                for (auto& p : result.path) {
-                    cout << "(" << p.first << "," << p.second << ") ";
-                }
-                cout << endl;
-                //读取文件成功，成功生成最优路径后开始游戏
-                // 读取JSON文件
-                ifstream ifs("boss_case.json");
-                nlohmann::json j;
-                ifs >> j;
+                vis1.showInfo("动态规划最优路径已显示，按任意键继续贪心演示...");
+                system("pause");
 
-                // 解析Boss血量
-                vector<int> bossHps = j["B"].get<vector<int>>();
+                // ---- 贪心部分 ----
+                // 使用初始迷宫状态
 
-                // 解析技能
-                std::vector<Skill> skills;
-                for (const auto& arr : j["PlayerSkills"]) {
-                    int damage = arr[0];
-                    int cooldown = arr[1];
-                    skills.emplace_back(damage, cooldown);
+                vector<pair<int, int>> fullPath;
+                vector<pair<int, int>> bossSteps;
+                totalScore = 0; // 全局分数清零
 
-                }
+                greedyResourceCollection(greedyMaze, startPos, exitPos, fullPath, bossSteps, totalScore);
 
-                // 计算最优技能释放顺序
-                BossFightStrategy bfs;
-                auto result = bfs.minTurnSkillSequence(bossHps, skills);
+                // 创建新的可视化器
+                MazeVisualizer vis2(greedyMaze.size());
+                vis2.drawMaze(greedyMaze);  // 确保使用贪心算法处理后的迷宫
 
-                // 打印最优回合数和顺序到控制台（可选）
-                //printf("min_turns: %d\n", result.first);
-                //for (const auto& step : result.second) {
-                    //printf("%s\n", step.c_str());
-                //}
-                // 自动可视化播放整个战斗流程
-                //fightBossVisualAuto(bossHps, skills, result.second);
+                // 添加一个标志位表示游戏是否真正结束
+                bool gameReallyEnded = false;
 
-                //解密过程
-                ifstream ifs2("pwd_000.json"); // 或别的含有C和L的json文件
-                nlohmann::json j2;
-                ifs2 >> j2;
-                std::vector<std::vector<int>> clues = j2["C"].get<std::vector<std::vector<int>>>();
-                std::string hashL = j2["L"].get<std::string>();
+                // 修改动画回调
+                vector<pair<int, int>> pendingBossFights;
+                vector<int> bossTurnsUsed; // 存储每个Boss战的回合数
 
-                PasswordResult pwd_result = solve_password(clues, hashL);
-                if (!pwd_result.password.empty()) {
-                    std::cout << "\n【谜题系统】自动推理并验证密码成功！" << std::endl;
-                    std::cout << "正确密码为: " << pwd_result.password << std::endl;
-                    std::cout << "推理尝试次数: " << pwd_result.tries << std::endl;
-                }
-                else {
-                    std::cout << "\n【谜题系统】密码推理失败，请检查线索或数据。" << std::endl;
-                }
- 
+                vis2.animateGreedy(
+                    fullPath, initialMaze, bossSteps, 100, // 使用 initialMaze 而非 greedyMaze
+                    [&](const pair<int, int>& pos) {
+                        if (greedyMaze[pos.first][pos.second].type == 'B') {
+                            // 创建非const副本用于修改
+                            pair<int, int> nonConstPos = pos;
+
+                            // 读取Boss战斗数据
+                            ifstream ifs("boss_case.json");
+                            if (!ifs) {
+                                cerr << "无法打开boss_case.json文件" << endl;
+                                return;
+                            }
+
+                            nlohmann::json j;
+                            ifs >> j;
+
+                            // 解析Boss血量
+                            vector<int> bossHps = j["B"].get<vector<int>>();
+
+                            // 解析技能
+                            std::vector<Skill> skills;
+                            for (const auto& arr : j["PlayerSkills"]) {
+                                int damage = arr[0];
+                                int cooldown = arr[1];
+                                skills.emplace_back(damage, cooldown);
+                            }
+
+                            // 计算最优技能释放顺序
+                            BossFightStrategy bfs;
+                            auto result = bfs.minTurnSkillSequence(bossHps, skills);
+                            int turns = result.first;
+
+                            // 显示战斗动画
+                            fightBossVisualAuto(bossHps, skills, result.second);
+
+                            // 记录战斗结果
+                            pendingBossFights.push_back(nonConstPos);
+                            bossTurnsUsed.push_back(turns);
+
+                            // 立即更新迷宫状态
+                            totalScore -= turns;
+                            greedyMaze[pos.first][pos.second].type = ' ';
+                            vis2.drawMaze(greedyMaze);
+                            FlushBatchDraw();
+
+                            cout << "触发Boss战 at (" << pos.first << "," << pos.second << ")" << endl;
+                        }
+                    }
+                );
+
+                cout << "最终得分: " << totalScore << endl;
+
+                vis2.showInfo("贪心收集过程已演示完，按任意键结束...");
+                system("pause");
             }
             else {
                 cout << "\n未找到有效路径！" << endl;
@@ -204,14 +246,13 @@ int main() {
         }
         else if (choice == 3) {
             cout << "程序已退出。\n";
-            break; // 跳出while，结束程序
+            break;
         }
         else {
             cout << "无效输入，请重新选择。\n";
             cin.clear();
             cin.ignore(10000, '\n');
         }
-
     }
-        return 0; 
+    return 0;
 }

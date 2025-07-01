@@ -15,7 +15,7 @@
 
 
 // ¶¯»­º¯ÊýÉùÃ÷
-void animatePlayerAttack(int fromX, int toX, int y, int bossX, int bossY, int bossIdx);
+void animatePlayerAttack(int fromX, int toX, int fromY, int y, int bossX, int bossY, int bossIdx);
 void fightBossVisualAuto(const std::vector<int>& bossHps, const std::vector<Skill>& skills, const std::vector<std::string>& actions);
 
 void outtextxy_format(int x, int y, const wchar_t* fmt, ...);

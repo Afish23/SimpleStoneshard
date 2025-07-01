@@ -197,7 +197,7 @@ PasswordResult solve_password(const std::vector<std::vector<int>>& clues, const 
         std::string current_hash = lock.hashPassword(current_pwd);
 
         // 调试输出：打印当前尝试的密码和
-        std::cout << "\n[DEBUG] 尝试密码 #" << tries << ": " << current_pwd;
+        //std::cout << "\n[DEBUG] 尝试密码 #" << tries << ": " << current_pwd;
         //    << ", 计算哈希: " << current_hash << std::endl;
         //std::cout << "目标哈希 L: " << L << std::endl;  // 同时输出目标哈希值
 
