@@ -28,7 +28,8 @@ bool tryUnlockLocker(vector<vector<MazeCell>>& maze,
 vector<pair<int, int>> findPathDFS(
     const vector<vector<MazeCell>>& maze,
     const pair<int, int>& start,
-    const pair<int, int>& end);
+    const pair<int, int>& end,
+    bool avoidTraps = true);
 
 bool moveToPosition(
     vector<vector<MazeCell>>& maze,
@@ -48,3 +49,12 @@ int getResourceValue(char cellType);
 int manhattanDistance(const pair<int, int>& a, const pair<int, int>& b);
 bool isPassable(char c);
 void printMazeWithPath(const vector<vector<MazeCell>>& maze, const vector<pair<int, int>>& fullPath);
+void exploreDFS(
+    vector<vector<MazeCell>>& maze,
+    pair<int, int>& playerPos,
+    const pair<int, int>& exitPos,
+    int& totalScore,
+    int& steps,
+    unordered_set<string>& visited,
+    vector<pair<int, int>>& fullPath,
+    bool& newResourceFound);
