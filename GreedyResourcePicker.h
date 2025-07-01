@@ -36,14 +36,15 @@ bool moveToPosition(
     const pair<int, int>& target,
     int& totalScore,
     int& steps,
-    unordered_set<string>& visited);
+    unordered_set<string>& visited,
+    vector<pair<int, int>>& fullPath);
 
 void greedyResourceCollection(
     vector<vector<MazeCell>>& maze,
     pair<int, int> startPos,
-    pair<int, int> exitPos,
-    int visionRadius);
+    pair<int, int> exitPos);
 
 int getResourceValue(char cellType);
 int manhattanDistance(const pair<int, int>& a, const pair<int, int>& b);
 bool isPassable(char c);
+void printMazeWithPath(const vector<vector<MazeCell>>& maze, const vector<pair<int, int>>& fullPath);

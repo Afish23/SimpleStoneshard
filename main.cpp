@@ -11,16 +11,12 @@
 #include <memory>
 #include <vector>
 #include <cstdlib>
+#include<sstream>
+#include <filesystem>
+#include <cstdint>
 using namespace std;
+//namespace fs = std::filesystem;
 
-// 假设正确密码
-vector<int> target = { 7, 5, 2 };
-// 根据正确密码给出线索
-vector<vector<int>> clues = {
-    {-1, -1},        // 每位素数且不重复
-    {3, 0},          // 第三位偶数
-    {-1, 5, -1}      // 第二位是5
-};
 
 int main() {
     srand(time(0));
@@ -47,7 +43,7 @@ int main() {
                 continue;
             }
 
-            int goldCount = max(1, n / 4);
+            int goldCount = max(1, n / 2);
             int trapCount = max(1, n / 5);
             int lockerCount = max(1, n / 6);
             int bossCount = 1;
@@ -63,7 +59,6 @@ int main() {
             }
 
             auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
-
             cout << "\n生成的迷宫如下：\n";
             MazeGenerator::printMaze(maze);
             MazeGenerator::writeMazeToJson(maze, "maze.json");
@@ -155,37 +150,60 @@ int main() {
                     cout << "(" << p.first << "," << p.second << ") ";
                 }
                 cout << endl;
+
+
+                //贪心算法
+                greedyResourceCollection(maze_objs, startPos, exitPos);
+
+
+
                 //读取文件成功，成功生成最优路径后开始游戏
                 // 读取JSON文件
-                ifstream ifs("boss_case.json");
-                nlohmann::json j;
-                ifs >> j;
+                //ifstream ifs("boss_case.json");
+                //nlohmann::json j;
+                //ifs >> j;
 
-                // 解析Boss血量
-                vector<int> bossHps = j["B"].get<vector<int>>();
+                //// 解析Boss血量
+                //vector<int> bossHps = j["B"].get<vector<int>>();
 
-                // 解析技能
-                std::vector<Skill> skills;
-                for (const auto& arr : j["PlayerSkills"]) {
-                    int damage = arr[0];
-                    int cooldown = arr[1];
-                    skills.emplace_back(damage, cooldown);
+                //// 解析技能
+                //std::vector<Skill> skills;
+                //for (const auto& arr : j["PlayerSkills"]) {
+                //    int damage = arr[0];
+                //    int cooldown = arr[1];
+                //    skills.emplace_back(damage, cooldown);
 
-                }
-
-                // 计算最优技能释放顺序
-                BossFightStrategy bfs;
-                auto result = bfs.minTurnSkillSequence(bossHps, skills);
-
-                // 打印最优回合数和顺序到控制台（可选）
-                //printf("min_turns: %d\n", result.first);
-                //for (const auto& step : result.second) {
-                    //printf("%s\n", step.c_str());
                 //}
-                // 自动可视化播放整个战斗流程
-                fightBossVisualAuto(bossHps, skills, result.second);
 
+                //// 计算最优技能释放顺序
+                //BossFightStrategy bfs;
+                //auto result = bfs.minTurnSkillSequence(bossHps, skills);
 
+                //// 打印最优回合数和顺序到控制台（可选）
+                ////printf("min_turns: %d\n", result.first);
+                ////for (const auto& step : result.second) {
+                //    //printf("%s\n", step.c_str());
+                ////}
+                //// 自动可视化播放整个战斗流程
+                //fightBossVisualAuto(bossHps, skills, result.second);
+
+                //解密过程
+                //ifstream ifs2("pwd_000.json"); // 或别的含有C和L的json文件
+                //nlohmann::json j2;
+                //ifs2 >> j2;
+                //std::vector<std::vector<int>> clues = j2["C"].get<std::vector<std::vector<int>>>();
+                //std::string hashL = j2["L"].get<std::string>();
+
+                //PasswordResult pwd_result = solve_password(clues, hashL);
+                //if (!pwd_result.password.empty()) {
+                //    std::cout << "\n【谜题系统】自动推理并验证密码成功！" << std::endl;
+                //    std::cout << "正确密码为: " << pwd_result.password << std::endl;
+                //    std::cout << "推理尝试次数: " << pwd_result.tries << std::endl;
+                //}
+                //else {
+                //    std::cout << "\n【谜题系统】密码推理失败，请检查线索或数据。" << std::endl;
+                //}
+ 
             }
             else {
                 cout << "\n未找到有效路径！" << endl;
@@ -207,4 +225,4 @@ int main() {
 
     }
         return 0; 
-    }
+}

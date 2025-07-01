@@ -1,11 +1,5 @@
 #include "GreedyResourcePicker.h"
 
-// 密码锁解谜函数（已有）
-int solveCombinationLock() {
-    // 回溯法破解三位密码锁
-    // 实际实现会返回尝试次数
-    return 3; // 示例值，实际应用中会返回真实尝试次数
-}
 
 // 触发Boss战的通用函数（新增）
 void triggerBossFight(
@@ -73,23 +67,7 @@ vector<pair<pair<int, int>, char>> getVisibleResources(
     return visibleResources;
 }
 
-// 机关解锁函数（密码锁破解）
-bool tryUnlockLocker(vector<vector<MazeCell>>& maze,
-    const pair<int, int>& pos,
-    int& totalScore) {
-    cout << "发现机关，开始解谜..." << endl;
 
-    // 破解密码锁
-    int attempts = solveCombinationLock();
-    int penalty = attempts; // 每次尝试扣5分
-
-    totalScore -= penalty;
-
-    cout << "扣分: " << penalty << endl;
-
-    maze[pos.first][pos.second].type = ' '; // 解锁后变为通路
-    return true;
-}
 
 // 深度优先搜索寻找出口路径
 vector<pair<int, int>> findPathDFS(
@@ -161,7 +139,8 @@ bool moveToPosition(
     const pair<int, int>& target,
     int& totalScore,
     int& steps,
-    unordered_set<string>& visited) {
+    unordered_set<string>& visited,
+    vector<pair<int, int>>& fullPath) {
 
     int n = maze.size();
     vector<vector<bool>> visitedMap(n, vector<bool>(n, false));
@@ -217,6 +196,7 @@ bool moveToPosition(
     for (const auto& pos : path) {
         playerPos = pos;
         steps++;
+        fullPath.push_back(playerPos);  // 记录路径
 
         // 检查是否到达出口
         if (maze[playerPos.first][playerPos.second].type == 'E') {
@@ -272,13 +252,16 @@ bool moveToPosition(
 void greedyResourceCollection(
     vector<vector<MazeCell>>& maze,
     pair<int, int> startPos,
-    pair<int, int> exitPos,
-    int visionRadius) {
-
+    pair<int, int> exitPos)
+{
     pair<int, int> playerPos = startPos;
     int totalScore = 0;
     int steps = 0;
     const int MAX_STEPS = 1000;
+
+    // 记录完整路径
+    vector<pair<int, int>> fullPath;
+    fullPath.push_back(playerPos);  // 添加起点位置
 
     unordered_set<string> visited;
     visited.insert(to_string(playerPos.first) + "," + to_string(playerPos.second));
@@ -296,9 +279,18 @@ void greedyResourceCollection(
         // 获取视野范围内的资源（固定3x3）
         auto visibleResources = getVisibleResources(maze, playerPos, 1);
 
-        if (!visibleResources.empty()) {
+        // 修改：过滤掉陷阱，只考虑金币和Boss
+        vector<pair<pair<int, int>, char>> filteredResources;
+        for (const auto& res : visibleResources) {
+            if (res.second != 'T') { // 排除陷阱
+                filteredResources.push_back(res);
+            }
+        }
+
+        // 修改：使用过滤后的资源列表
+        if (!filteredResources.empty()) {
             vector<pair<pair<int, int>, double>> resourceValues;
-            for (const auto& res : visibleResources) {
+            for (const auto& res : filteredResources) {
                 pair<int, int> pos = res.first;
                 char type = res.second;
                 int value = getResourceValue(type);
@@ -323,15 +315,16 @@ void greedyResourceCollection(
                 << ") 类型 '" << targetType
                 << "' 性价比: " << resourceValues[0].second << endl;
 
-            // 移动到目标位置
-            if (!moveToPosition(maze, playerPos, targetPos, totalScore, steps, visited)) {
+            // 移动到目标位置（传递fullPath参数）
+            if (!moveToPosition(maze, playerPos, targetPos, totalScore, steps, visited, fullPath)) {
                 cout << "移动失败，尝试寻找其他路径..." << endl;
 
                 // 如果移动失败，尝试寻找出口
                 auto path = findPathDFS(maze, playerPos, exitPos);
                 if (!path.empty()) {
                     cout << "找到替代路径，转向出口..." << endl;
-                    if (!moveToPosition(maze, playerPos, exitPos, totalScore, steps, visited)) {
+                    // 传递fullPath参数
+                    if (!moveToPosition(maze, playerPos, exitPos, totalScore, steps, visited, fullPath)) {
                         break;
                     }
                 }
@@ -360,6 +353,7 @@ void greedyResourceCollection(
                 // 移动到下一个位置
                 playerPos = nextPos;
                 steps++;
+                fullPath.push_back(playerPos);  // 记录路径
 
                 // 检查是否到达出口
                 if (playerPos == exitPos) {
@@ -418,8 +412,10 @@ void greedyResourceCollection(
     cout << "游戏结束。总步数: " << steps
         << " 总得分: " << totalScore
         << endl;
-}
 
+    // 打印带路径标记的迷宫
+    printMazeWithPath(maze, fullPath);
+}
 int getResourceValue(char cellType) {
     int value;
     if (cellType == 'G')
@@ -445,4 +441,76 @@ bool isPassable(char c) {
     }
     // 其他类型都可通行（空地、金币、陷阱、boss、机关等）
     return true;
+}
+
+bool tryUnlockLocker(vector<vector<MazeCell>>& maze,
+    const pair<int, int>& pos,
+    int& totalScore) {
+
+    cout << "发现机关，开始解谜..." << endl;
+
+    // 尝试读取密码线索文件
+    ifstream ifs2("pwd_000.json");
+    if (!ifs2) {
+        cerr << "无法打开密码线索文件" << endl;
+        cout << "机关解锁失败！" << endl;
+        return false;
+    }
+
+    nlohmann::json j2;
+    ifs2 >> j2;
+    std::vector<std::vector<int>> clues = j2["C"].get<std::vector<std::vector<int>>>();
+    std::string hashL = j2["L"].get<std::string>();
+
+    // 解谜密码
+    PasswordResult pwd_result = solve_password(clues, hashL);
+
+    if (!pwd_result.password.empty()) {
+        std::cout << "\n【谜题系统】自动推理并验证密码成功！" << std::endl;
+        // 扣分：每次尝试扣5分
+        int penalty = pwd_result.tries;
+        std::cout << "正确密码为: " << pwd_result.password << std::endl;
+        std::cout << "推理尝试次数: " << pwd_result.tries << std::endl;
+
+        totalScore -= penalty;
+        cout << "扣分: " << penalty << endl;
+
+        // 解锁后变为通路
+        maze[pos.first][pos.second].type = ' ';
+        return true;
+    }
+    else {
+        std::cout << "\n【谜题系统】密码推理失败，机关解锁失败！" << std::endl;
+        return false;
+    }
+}
+
+
+
+// 添加路径标记函数
+void printMazeWithPath(const vector<vector<MazeCell>>& maze, const vector<pair<int, int>>& fullPath) {
+    // 创建迷宫副本
+    vector<vector<char>> mazeCopy(maze.size(), vector<char>(maze[0].size()));
+    for (int i = 0; i < maze.size(); ++i) {
+        for (int j = 0; j < maze[0].size(); ++j) {
+            mazeCopy[i][j] = maze[i][j].type;
+        }
+    }
+
+    // 标记路径
+    for (const auto& pos : fullPath) {
+        if (mazeCopy[pos.first][pos.second] != 'S' &&
+            mazeCopy[pos.first][pos.second] != 'E') {
+            mazeCopy[pos.first][pos.second] = '*';
+        }
+    }
+
+    // 打印带路径标记的迷宫
+    cout << "路径标记图 (* 表示路径):" << endl;
+    for (int i = 0; i < mazeCopy.size(); ++i) {
+        for (int j = 0; j < mazeCopy[0].size(); ++j) {
+            cout << mazeCopy[i][j] << ' ';
+        }
+        cout << endl;
+    }
 }
