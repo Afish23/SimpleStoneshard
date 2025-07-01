@@ -1,26 +1,26 @@
-ï»¿#include "GreedyResourcePicker.h"
+#include "GreedyResourcePicker.h"
 
 
-// è§¦å‘Bossæˆ˜çš„é€šç”¨å‡½æ•°ï¼ˆæ–°å¢ï¼‰
+// ´¥·¢BossÕ½µÄÍ¨ÓÃº¯Êı£¨ĞÂÔö£©
 void triggerBossFight(
     vector<vector<MazeCell>>& maze,
     pair<int, int>& playerPos,
     int& totalScore) {
 
-    cout << "è§¦å‘bossæˆ˜" << endl;
+    cout << "´¥·¢bossÕ½" << endl;
     ifstream ifs("boss_case.json");
     if (!ifs) {
-        cerr << "æ— æ³•æ‰“å¼€boss_case.jsonæ–‡ä»¶" << endl;
+        cerr << "ÎŞ·¨´ò¿ªboss_case.jsonÎÄ¼ş" << endl;
         return;
     }
 
     nlohmann::json j;
     ifs >> j;
 
-    // è§£æBossè¡€é‡
+    // ½âÎöBossÑªÁ¿
     vector<int> bossHps = j["B"].get<vector<int>>();
 
-    // è§£ææŠ€èƒ½
+    // ½âÎö¼¼ÄÜ
     std::vector<Skill> skills;
     for (const auto& arr : j["PlayerSkills"]) {
         int damage = arr[0];
@@ -28,19 +28,19 @@ void triggerBossFight(
         skills.emplace_back(damage, cooldown);
     }
 
-    // è®¡ç®—æœ€ä¼˜æŠ€èƒ½é‡Šæ”¾é¡ºåº
+    // ¼ÆËã×îÓÅ¼¼ÄÜÊÍ·ÅË³Ğò
     BossFightStrategy bfs;
     auto result = bfs.minTurnSkillSequence(bossHps, skills);
 
-    // è‡ªåŠ¨å¯è§†åŒ–æ’­æ”¾æ•´ä¸ªæˆ˜æ–—æµç¨‹
+    // ×Ô¶¯¿ÉÊÓ»¯²¥·ÅÕû¸öÕ½¶·Á÷³Ì
     fightBossVisualAuto(bossHps, skills, result.second);
 
-    maze[playerPos.first][playerPos.second].type = ' '; // bossè¢«å‡»è´¥åå˜ä¸ºé€šè·¯
-    cout << "æˆåŠŸå‡»è´¥bossï¼å½“å‰ä½ç½®: (" << playerPos.first << ", " << playerPos.second << ")"
-        << " æ€»å¾—åˆ†: " << totalScore << endl;
+    maze[playerPos.first][playerPos.second].type = ' '; // boss±»»÷°Üºó±äÎªÍ¨Â·
+    cout << "³É¹¦»÷°Üboss£¡µ±Ç°Î»ÖÃ: (" << playerPos.first << ", " << playerPos.second << ")"
+        << " ×ÜµÃ·Ö: " << totalScore << endl;
 }
 
-// è§†é‡å‡½æ•°ï¼ˆå›ºå®š3x3è§†é‡ï¼‰
+// ÊÓÒ°º¯Êı£¨¹Ì¶¨3x3ÊÓÒ°£©
 vector<pair<pair<int, int>, char>> getVisibleResources(
     const vector<vector<MazeCell>>& maze,
     const pair<int, int>& playerPos,
@@ -51,14 +51,14 @@ vector<pair<pair<int, int>, char>> getVisibleResources(
     int x = playerPos.first;
     int y = playerPos.second;
 
-    // å›ºå®š3x3è§†é‡èŒƒå›´
+    // ¹Ì¶¨3x3ÊÓÒ°·¶Î§
     for (int i = max(0, x - 1); i <= min(n - 1, x + 1); i++) {
         for (int j = max(0, y - 1); j <= min(n - 1, y + 1); j++) {
-            // è·³è¿‡ç©å®¶è‡ªèº«ä½ç½®
+            // Ìø¹ıÍæ¼Ò×ÔÉíÎ»ÖÃ
             if (i == x && j == y) continue;
 
             char cellType = maze[i][j].type;
-            // åŒ…æ‹¬é‡‘å¸ã€é™·é˜±å’Œboss
+            // °üÀ¨½ğ±Ò¡¢ÏİÚåºÍboss
             if (cellType == 'G' || cellType == 'T' || cellType == 'B') {
                 visibleResources.push_back({ {i, j}, cellType });
             }
@@ -69,19 +69,19 @@ vector<pair<pair<int, int>, char>> getVisibleResources(
 
 
 
-// æ·±åº¦ä¼˜å…ˆæœç´¢å¯»æ‰¾å‡ºå£è·¯å¾„
+// Éî¶ÈÓÅÏÈËÑË÷Ñ°ÕÒ³ö¿ÚÂ·¾¶
 vector<pair<int, int>> findPathDFS(
     const vector<vector<MazeCell>>& maze,
     const pair<int, int>& start,
     const pair<int, int>& end,
-    bool avoidTraps)  // æ·»åŠ å‚æ•°æ§åˆ¶æ˜¯å¦é¿å¼€é™·é˜±
+    bool avoidTraps)  // Ìí¼Ó²ÎÊı¿ØÖÆÊÇ·ñ±Ü¿ªÏİÚå
 {
     int n = maze.size();
     vector<vector<bool>> visited(n, vector<bool>(n, false));
     vector<vector<pair<int, int>>> parent(n, vector<pair<int, int>>(n, { -1, -1 }));
     stack<pair<int, int>> s;
 
-    // æ–¹å‘æ•°ç»„
+    // ·½ÏòÊı×é
     vector<pair<int, int>> directions = { {-1,0}, {1,0}, {0,-1}, {0,1} };
 
     visited[start.first][start.second] = true;
@@ -93,13 +93,13 @@ vector<pair<int, int>> findPathDFS(
         auto curr = s.top();
         s.pop();
 
-        // å¦‚æœåˆ°è¾¾ç»ˆç‚¹
+        // Èç¹ûµ½´ïÖÕµã
         if (curr == end) {
             found = true;
             break;
         }
 
-        // éšæœºæ–¹å‘æ¢ç´¢ï¼ˆæ¨¡æ‹Ÿæ·±åº¦ä¼˜å…ˆï¼‰
+        // Ëæ»ú·½ÏòÌ½Ë÷£¨Ä£ÄâÉî¶ÈÓÅÏÈ£©
         vector<pair<int, int>> shuffled = directions;
         random_shuffle(shuffled.begin(), shuffled.end());
 
@@ -107,16 +107,16 @@ vector<pair<int, int>> findPathDFS(
             int nx = curr.first + dir.first;
             int ny = curr.second + dir.second;
 
-            // æ£€æŸ¥è¾¹ç•Œå’Œæ˜¯å¦å¯é€šè¡Œ
+            // ¼ì²é±ß½çºÍÊÇ·ñ¿ÉÍ¨ĞĞ
             if (nx >= 0 && nx < n && ny >= 0 && ny < n &&
                 !visited[nx][ny]) {
 
                 char cellType = maze[nx][ny].type;
 
-                // æ ¹æ®å‚æ•°å†³å®šæ˜¯å¦é¿å¼€é™·é˜±å’Œæœºå…³
+                // ¸ù¾İ²ÎÊı¾ö¶¨ÊÇ·ñ±Ü¿ªÏİÚåºÍ»ú¹Ø
                 if (avoidTraps) {
                     if (cellType == 'T' || cellType == 'L') {
-                        // é™¤éæ˜¯ç»ˆç‚¹ï¼Œå¦åˆ™é¿å¼€
+                        // ³ı·ÇÊÇÖÕµã£¬·ñÔò±Ü¿ª
                         if (nx != end.first || ny != end.second) {
                             continue;
                         }
@@ -132,7 +132,7 @@ vector<pair<int, int>> findPathDFS(
         }
     }
 
-    // é‡å»ºè·¯å¾„
+    // ÖØ½¨Â·¾¶
     vector<pair<int, int>> path;
     if (found) {
         pair<int, int> curr = end;
@@ -146,7 +146,7 @@ vector<pair<int, int>> findPathDFS(
     return path;
 }
 
-// ç§»åŠ¨å‡½æ•°ï¼ˆæ·»åŠ æœºå…³æ‰£åˆ†ï¼‰
+// ÒÆ¶¯º¯Êı£¨Ìí¼Ó»ú¹Ø¿Û·Ö£©
 
 bool moveToPosition(
     vector<vector<MazeCell>>& maze,
@@ -186,7 +186,7 @@ bool moveToPosition(
                 !visitedMap[nx][ny] &&
                 isPassable(maze[nx][ny].type))
             {
-                // é¿å¼€éç›®æ ‡ä½ç½®çš„é™·é˜±å’Œæœºå…³
+                // ±Ü¿ª·ÇÄ¿±êÎ»ÖÃµÄÏİÚåºÍ»ú¹Ø
                 if ((maze[nx][ny].type == 'T' || maze[nx][ny].type == 'L') &&
                     (nx != target.first || ny != target.second))
                 {
@@ -201,50 +201,50 @@ bool moveToPosition(
     }
 
     if (!found) {
-        cout << "æ— æ³•åˆ°è¾¾ç›®æ ‡ä½ç½® (" << target.first << ", " << target.second << ")" << endl;
+        cout << "ÎŞ·¨µ½´ïÄ¿±êÎ»ÖÃ (" << target.first << ", " << target.second << ")" << endl;
 
-        // å°è¯•ä¸é¿å¼€é™·é˜±çš„è·¯å¾„
-        cout << "å°è¯•ç©¿è¶Šé™·é˜±è·¯å¾„..." << endl;
+        // ³¢ÊÔ²»±Ü¿ªÏİÚåµÄÂ·¾¶
+        cout << "³¢ÊÔ´©Ô½ÏİÚåÂ·¾¶..." << endl;
         auto trapPath = findPathDFS(maze, playerPos, target, false);
 
         if (!trapPath.empty()) {
-            cout << "æ‰¾åˆ°ç©¿è¶Šé™·é˜±è·¯å¾„ï¼Œå…±" << trapPath.size() << "æ­¥" << endl;
+            cout << "ÕÒµ½´©Ô½ÏİÚåÂ·¾¶£¬¹²" << trapPath.size() << "²½" << endl;
 
-            // æ²¿è·¯å¾„ç§»åŠ¨
+            // ÑØÂ·¾¶ÒÆ¶¯
             for (const auto& nextPos : trapPath) {
                 playerPos = nextPos;
                 steps++;
                 fullPath.push_back(playerPos);
 
-                // å¤„ç†å½“å‰ä½ç½®çš„å•å…ƒæ ¼
+                // ´¦Àíµ±Ç°Î»ÖÃµÄµ¥Ôª¸ñ
                 char cellType = maze[playerPos.first][playerPos.second].type;
                 if (cellType == 'G' || cellType == 'T') {
                     int value = getResourceValue(cellType);
                     totalScore += value;
 
                     if (cellType == 'T') {
-                        cout << "è§¦å‘é™·é˜±ï¼ŒæŸå¤± " << (-value) << " åˆ†ã€‚";
+                        cout << "´¥·¢ÏİÚå£¬ËğÊ§ " << (-value) << " ·Ö¡£";
                     }
                     else {
-                        cout << "æ”¶é›†èµ„æº '" << cellType << "' è·å¾— " << value << " åˆ†ã€‚";
+                        cout << "ÊÕ¼¯×ÊÔ´ '" << cellType << "' »ñµÃ " << value << " ·Ö¡£";
                     }
                     maze[playerPos.first][playerPos.second].type = ' ';
                 }
-                // ===== æ·»åŠ æœºå…³å¤„ç† =====
+                // ===== Ìí¼Ó»ú¹Ø´¦Àí =====
                 else if (cellType == 'L') {
                     bool unlocked = tryUnlockLocker(maze, playerPos, totalScore);
                     if (unlocked) {
-                        cout << "æœºå…³å·²è§£é”ï¼Œå˜ä¸ºé€šè·¯ã€‚";
+                        cout << "»ú¹ØÒÑ½âËø£¬±äÎªÍ¨Â·¡£";
                     }
                 }
-                // ===== ç»“æŸæ·»åŠ  =====
-                // ... (å…¶ä»–ç±»å‹å¤„ç†ä¸å˜)
+                // ===== ½áÊøÌí¼Ó =====
+                // ... (ÆäËûÀàĞÍ´¦Àí²»±ä)
 
-                cout << " å½“å‰ä½ç½®: (" << playerPos.first << ", " << playerPos.second << ")"
-                    << " æ€»å¾—åˆ†: " << totalScore
+                cout << " µ±Ç°Î»ÖÃ: (" << playerPos.first << ", " << playerPos.second << ")"
+                    << " ×ÜµÃ·Ö: " << totalScore
                     << endl;
 
-                // æ£€æŸ¥æ˜¯å¦åˆ°è¾¾ç›®æ ‡
+                // ¼ì²éÊÇ·ñµ½´ïÄ¿±ê
                 if (playerPos == target) {
                     return true;
                 }
@@ -255,7 +255,7 @@ bool moveToPosition(
         return false;
     }
 
-    // é‡å»ºè·¯å¾„
+    // ÖØ½¨Â·¾¶
     vector<pair<int, int>> path;
     pair<int, int> curr = target;
     while (curr != playerPos) {
@@ -264,67 +264,67 @@ bool moveToPosition(
     }
     reverse(path.begin(), path.end());
 
-    // è·å–ç›®æ ‡ä½ç½®ç±»å‹ï¼ˆç”¨äºåˆ¤æ–­æ˜¯å¦æ˜¯å‡ºå£ï¼‰
+    // »ñÈ¡Ä¿±êÎ»ÖÃÀàĞÍ£¨ÓÃÓÚÅĞ¶ÏÊÇ·ñÊÇ³ö¿Ú£©
     char targetType = maze[target.first][target.second].type;
 
-    // æ²¿è·¯å¾„ç§»åŠ¨
+    // ÑØÂ·¾¶ÒÆ¶¯
     for (const auto& pos : path) {
         playerPos = pos;
         steps++;
         fullPath.push_back(playerPos);
 
-        // æ£€æŸ¥æ˜¯å¦åˆ°è¾¾å‡ºå£
+        // ¼ì²éÊÇ·ñµ½´ï³ö¿Ú
         if (maze[playerPos.first][playerPos.second].type == 'E') {
-            cout << "æ­å–œï¼ä½ å·²åˆ°è¾¾å‡ºå£ï¼" << endl;
+            cout << "¹§Ï²£¡ÄãÒÑµ½´ï³ö¿Ú£¡" << endl;
             return true;
         }
 
-        // å¤„ç†å½“å‰ä½ç½®çš„å•å…ƒæ ¼
+        // ´¦Àíµ±Ç°Î»ÖÃµÄµ¥Ôª¸ñ
         char cellType = maze[playerPos.first][playerPos.second].type;
         if (cellType == 'G' || cellType == 'T') {
             int value = getResourceValue(cellType);
             totalScore += value;
 
             if (cellType == 'T') {
-                cout << "è§¦å‘é™·é˜±ï¼ŒæŸå¤± " << (-value) << " åˆ†ã€‚";
+                cout << "´¥·¢ÏİÚå£¬ËğÊ§ " << (-value) << " ·Ö¡£";
             }
             else {
-                cout << "æ”¶é›†èµ„æº '" << cellType << "' è·å¾— " << value << " åˆ†ã€‚";
+                cout << "ÊÕ¼¯×ÊÔ´ '" << cellType << "' »ñµÃ " << value << " ·Ö¡£";
             }
             maze[playerPos.first][playerPos.second].type = ' ';
         }
-        // ===== æ·»åŠ æœºå…³å¤„ç† =====
+        // ===== Ìí¼Ó»ú¹Ø´¦Àí =====
         else if (cellType == 'L') {
             bool unlocked = tryUnlockLocker(maze, playerPos, totalScore);
             if (unlocked) {
-                cout << "æœºå…³å·²è§£é”ï¼Œå˜ä¸ºé€šè·¯ã€‚";
+                cout << "»ú¹ØÒÑ½âËø£¬±äÎªÍ¨Â·¡£";
                 maze[playerPos.first][playerPos.second].type = ' ';
             }
             else {
-                // è§£è°œå¤±è´¥æ—¶ï¼Œç§»é™¤è®¿é—®æ ‡è®°ä»¥ä¾¿å†æ¬¡å°è¯•
+                // ½âÃÕÊ§°ÜÊ±£¬ÒÆ³ı·ÃÎÊ±ê¼ÇÒÔ±ãÔÙ´Î³¢ÊÔ
                 string posKey = to_string(playerPos.first) + "," + to_string(playerPos.second);
-                visited.erase(posKey); // å…³é”®ä¿®å¤ï¼šå…è®¸å†æ¬¡è®¿é—®è¯¥ä½ç½®
+                visited.erase(posKey); // ¹Ø¼üĞŞ¸´£ºÔÊĞíÔÙ´Î·ÃÎÊ¸ÃÎ»ÖÃ
             }
 
         }
-        // ===== ç»“æŸæ·»åŠ  =====
+        // ===== ½áÊøÌí¼Ó =====
         else if (cellType == 'B') {
             triggerBossFight(maze, playerPos, totalScore);
         }
 
-        cout << " å½“å‰ä½ç½®: (" << playerPos.first << ", " << playerPos.second << ")"
-            << " æ€»å¾—åˆ†: " << totalScore
+        cout << " µ±Ç°Î»ÖÃ: (" << playerPos.first << ", " << playerPos.second << ")"
+            << " ×ÜµÃ·Ö: " << totalScore
             << endl;
 
-        // æ ‡è®°ä¸ºå·²è®¿é—®
+        // ±ê¼ÇÎªÒÑ·ÃÎÊ
         string posKey = to_string(playerPos.first) + "," + to_string(playerPos.second);
         visited.insert(posKey);
 
-        // åªæœ‰å½“ç›®æ ‡ä¸æ˜¯å‡ºå£æ—¶ï¼Œæ‰æ£€æŸ¥æ–°èµ„æº
+        // Ö»ÓĞµ±Ä¿±ê²»ÊÇ³ö¿ÚÊ±£¬²Å¼ì²éĞÂ×ÊÔ´
         if (targetType != 'E') {
             auto newResources = getVisibleResources(maze, playerPos, 1);
 
-            // è¿‡æ»¤æ‰é™·é˜±ï¼Œåªè€ƒè™‘é‡‘å¸å’ŒBoss
+            // ¹ıÂËµôÏİÚå£¬Ö»¿¼ÂÇ½ğ±ÒºÍBoss
             vector<pair<pair<int, int>, char>> filteredNewResources;
             for (const auto& res : newResources) {
                 if (res.second == 'G' || res.second == 'B') {
@@ -333,7 +333,7 @@ bool moveToPosition(
             }
 
             if (!filteredNewResources.empty()) {
-                cout << "å‘ç°æ–°èµ„æºï¼Œä¸­æ–­å½“å‰è·¯å¾„ï¼" << endl;
+                cout << "·¢ÏÖĞÂ×ÊÔ´£¬ÖĞ¶Ïµ±Ç°Â·¾¶£¡" << endl;
                 return true;
             }
         }
@@ -342,7 +342,7 @@ bool moveToPosition(
     return true;
 }
 
-// ä¸»å‡½æ•°ï¼ˆæ·»åŠ æ·±åº¦æœç´¢æ¨¡å¼ï¼‰
+// Ö÷º¯Êı£¨Ìí¼ÓÉî¶ÈËÑË÷Ä£Ê½£©
 void greedyResourceCollection(
     vector<vector<MazeCell>>& maze,
     pair<int, int> startPos,
@@ -353,35 +353,35 @@ void greedyResourceCollection(
     int steps = 0;
     const int MAX_STEPS = 1000;
 
-    // è®°å½•å®Œæ•´è·¯å¾„
+    // ¼ÇÂ¼ÍêÕûÂ·¾¶
     vector<pair<int, int>> fullPath;
-    fullPath.push_back(playerPos);  // æ·»åŠ èµ·ç‚¹ä½ç½®
+    fullPath.push_back(playerPos);  // Ìí¼ÓÆğµãÎ»ÖÃ
 
     unordered_set<string> visited;
     visited.insert(to_string(playerPos.first) + "," + to_string(playerPos.second));
 
-    cout << "å¼€å§‹èµ„æºæ”¶é›†ï¼Œèµ·å§‹ä½ç½®: ("
+    cout << "¿ªÊ¼×ÊÔ´ÊÕ¼¯£¬ÆğÊ¼Î»ÖÃ: ("
         << playerPos.first << ", " << playerPos.second << ")"
         << endl;
 
     while (steps < MAX_STEPS) {
         if (playerPos == exitPos) {
-            cout << "æ­å–œï¼ä½ å·²åˆ°è¾¾å‡ºå£ï¼" << endl;
+            cout << "¹§Ï²£¡ÄãÒÑµ½´ï³ö¿Ú£¡" << endl;
             break;
         }
 
-        // è·å–è§†é‡èŒƒå›´å†…çš„èµ„æºï¼ˆå›ºå®š3x3ï¼‰
+        // »ñÈ¡ÊÓÒ°·¶Î§ÄÚµÄ×ÊÔ´£¨¹Ì¶¨3x3£©
         auto visibleResources = getVisibleResources(maze, playerPos, 1);
 
-        // ä¿®æ”¹ï¼šè¿‡æ»¤æ‰é™·é˜±ï¼Œåªè€ƒè™‘é‡‘å¸å’ŒBoss
+        // ĞŞ¸Ä£º¹ıÂËµôÏİÚå£¬Ö»¿¼ÂÇ½ğ±ÒºÍBoss
         vector<pair<pair<int, int>, char>> filteredResources;
         for (const auto& res : visibleResources) {
-            if (res.second != 'T' && res.second != 'L') { // æ’é™¤é™·é˜±å’Œæœºå…³
+            if (res.second != 'T' && res.second != 'L') { // ÅÅ³ıÏİÚåºÍ»ú¹Ø
                 filteredResources.push_back(res);
             }
         }
 
-        // ä¿®æ”¹ï¼šä½¿ç”¨è¿‡æ»¤åçš„èµ„æºåˆ—è¡¨
+        // ĞŞ¸Ä£ºÊ¹ÓÃ¹ıÂËºóµÄ×ÊÔ´ÁĞ±í
         if (!filteredResources.empty()) {
             vector<pair<pair<int, int>, double>> resourceValues;
             for (const auto& res : filteredResources) {
@@ -404,63 +404,63 @@ void greedyResourceCollection(
             pair<int, int> targetPos = resourceValues[0].first;
             char targetType = maze[targetPos.first][targetPos.second].type;
 
-            cout << "æ­¥éª¤ " << steps + 1 << ": é€‰æ‹©ç›®æ ‡ ("
+            cout << "²½Öè " << steps + 1 << ": Ñ¡ÔñÄ¿±ê ("
                 << targetPos.first << ", " << targetPos.second
-                << ") ç±»å‹ '" << targetType
-                << "' æ€§ä»·æ¯”: " << resourceValues[0].second << endl;
+                << ") ÀàĞÍ '" << targetType
+                << "' ĞÔ¼Û±È: " << resourceValues[0].second << endl;
 
-            // ç§»åŠ¨åˆ°ç›®æ ‡ä½ç½®ï¼ˆä¼ é€’fullPathå‚æ•°ï¼‰
+            // ÒÆ¶¯µ½Ä¿±êÎ»ÖÃ£¨´«µİfullPath²ÎÊı£©
             if (!moveToPosition(maze, playerPos, targetPos, totalScore, steps, visited, fullPath)) {
-                cout << "ç§»åŠ¨å¤±è´¥ï¼Œå°è¯•å¯»æ‰¾å…¶ä»–è·¯å¾„..." << endl;
+                cout << "ÒÆ¶¯Ê§°Ü£¬³¢ÊÔÑ°ÕÒÆäËûÂ·¾¶..." << endl;
 
-                // å¦‚æœç§»åŠ¨å¤±è´¥ï¼Œå°è¯•å¯»æ‰¾å‡ºå£
-                // å…ˆå°è¯•é¿å¼€é™·é˜±çš„è·¯å¾„
+                // Èç¹ûÒÆ¶¯Ê§°Ü£¬³¢ÊÔÑ°ÕÒ³ö¿Ú
+                // ÏÈ³¢ÊÔ±Ü¿ªÏİÚåµÄÂ·¾¶
                 auto path = findPathDFS(maze, playerPos, exitPos, true);
                 if (path.empty()) {
-                    cout << "æ— æ³•é¿å¼€é™·é˜±ï¼Œå°è¯•ç©¿è¶Šé™·é˜±è·¯å¾„..." << endl;
+                    cout << "ÎŞ·¨±Ü¿ªÏİÚå£¬³¢ÊÔ´©Ô½ÏİÚåÂ·¾¶..." << endl;
                     path = findPathDFS(maze, playerPos, exitPos, false);
                 }
 
                 if (!path.empty()) {
-                    cout << "æ‰¾åˆ°æ›¿ä»£è·¯å¾„ï¼Œè½¬å‘å‡ºå£..." << endl;
-                    // ä¼ é€’fullPathå‚æ•°
+                    cout << "ÕÒµ½Ìæ´úÂ·¾¶£¬×ªÏò³ö¿Ú..." << endl;
+                    // ´«µİfullPath²ÎÊı
                     if (!moveToPosition(maze, playerPos, exitPos, totalScore, steps, visited, fullPath)) {
                         break;
                     }
                 }
                 else {
-                    cout << "æ— å¯è¡Œè·¯å¾„ï¼" << endl;
+                    cout << "ÎŞ¿ÉĞĞÂ·¾¶£¡" << endl;
                     break;
                 }
             }
         }
-        // æ·±åº¦æœç´¢æ¨¡å¼ï¼ˆè§†é‡å†…æ— èµ„æºï¼‰
+        // Éî¶ÈËÑË÷Ä£Ê½£¨ÊÓÒ°ÄÚÎŞ×ÊÔ´£©
         else {
-            cout << "è§†é‡å†…æ— èµ„æºï¼Œè½¬å…¥æ·±åº¦æœç´¢æ¨¡å¼..." << endl;
+            cout << "ÊÓÒ°ÄÚÎŞ×ÊÔ´£¬×ªÈëÉî¶ÈËÑË÷Ä£Ê½..." << endl;
 
-            // ä½¿ç”¨DFSæ¢ç´¢æ‰€æœ‰è·¯å¾„ï¼ˆåŒ…æ‹¬æ­»è·¯ï¼‰
+            // Ê¹ÓÃDFSÌ½Ë÷ËùÓĞÂ·¾¶£¨°üÀ¨ËÀÂ·£©
             bool newResourceFound = false;
             exploreDFS(maze, playerPos, exitPos, totalScore, steps, visited, fullPath, newResourceFound);
 
-            // æ£€æŸ¥æ˜¯å¦åˆ°è¾¾å‡ºå£
+            // ¼ì²éÊÇ·ñµ½´ï³ö¿Ú
             if (playerPos == exitPos) {
                 break;
             }
 
-            // å¦‚æœå‘ç°æ–°èµ„æºï¼Œå¤„ç†è¿™äº›èµ„æº
+            // Èç¹û·¢ÏÖĞÂ×ÊÔ´£¬´¦ÀíÕâĞ©×ÊÔ´
             if (newResourceFound) {
-                // è·å–è§†é‡èŒƒå›´å†…çš„èµ„æº
+                // »ñÈ¡ÊÓÒ°·¶Î§ÄÚµÄ×ÊÔ´
                 auto visibleResources = getVisibleResources(maze, playerPos, 1);
 
-                // è¿‡æ»¤æ‰é™·é˜±ï¼Œåªè€ƒè™‘é‡‘å¸å’ŒBoss
+                // ¹ıÂËµôÏİÚå£¬Ö»¿¼ÂÇ½ğ±ÒºÍBoss
                 vector<pair<pair<int, int>, char>> filteredResources;
                 for (const auto& res : visibleResources) {
-                    if (res.second != 'T' && res.second != 'L') { // æ’é™¤é™·é˜±å’Œæœºå…³
+                    if (res.second != 'T' && res.second != 'L') { // ÅÅ³ıÏİÚåºÍ»ú¹Ø
                         filteredResources.push_back(res);
                     }
                 }
 
-                // å¦‚æœæœ‰æœ‰æ•ˆèµ„æºï¼Œå¤„ç†å®ƒä»¬
+                // Èç¹ûÓĞÓĞĞ§×ÊÔ´£¬´¦ÀíËüÃÇ
                 if (!filteredResources.empty()) {
                     vector<pair<pair<int, int>, double>> resourceValues;
                     for (const auto& res : filteredResources) {
@@ -483,46 +483,46 @@ void greedyResourceCollection(
                     pair<int, int> targetPos = resourceValues[0].first;
                     char targetType = maze[targetPos.first][targetPos.second].type;
 
-                    cout << "æ­¥éª¤ " << steps + 1 << ": é€‰æ‹©ç›®æ ‡ ("
+                    cout << "²½Öè " << steps + 1 << ": Ñ¡ÔñÄ¿±ê ("
                         << targetPos.first << ", " << targetPos.second
-                        << ") ç±»å‹ '" << targetType
-                        << "' æ€§ä»·æ¯”: " << resourceValues[0].second << endl;
+                        << ") ÀàĞÍ '" << targetType
+                        << "' ĞÔ¼Û±È: " << resourceValues[0].second << endl;
 
-                    // ç§»åŠ¨åˆ°ç›®æ ‡ä½ç½®ï¼ˆä¼ é€’fullPathå‚æ•°ï¼‰
+                    // ÒÆ¶¯µ½Ä¿±êÎ»ÖÃ£¨´«µİfullPath²ÎÊı£©
                     if (!moveToPosition(maze, playerPos, targetPos, totalScore, steps, visited, fullPath)) {
-                        cout << "ç§»åŠ¨å¤±è´¥ï¼Œç»§ç»­æ·±åº¦æœç´¢..." << endl;
-                        // å¦‚æœç§»åŠ¨å¤±è´¥ï¼Œç»§ç»­æ·±åº¦æœç´¢
+                        cout << "ÒÆ¶¯Ê§°Ü£¬¼ÌĞøÉî¶ÈËÑË÷..." << endl;
+                        // Èç¹ûÒÆ¶¯Ê§°Ü£¬¼ÌĞøÉî¶ÈËÑË÷
                         continue;
                     }
                 }
             }
-            // === æ–°å¢å¤„ç†ï¼šæœªå‘ç°æ–°èµ„æºæ—¶å°è¯•å‰å¾€å‡ºå£ ===
+            // === ĞÂÔö´¦Àí£ºÎ´·¢ÏÖĞÂ×ÊÔ´Ê±³¢ÊÔÇ°Íù³ö¿Ú ===
             else {
-                cout << "DFSæ¢ç´¢æœªå‘ç°æ–°èµ„æºï¼Œå°è¯•å‰å¾€å‡ºå£..." << endl;
+                cout << "DFSÌ½Ë÷Î´·¢ÏÖĞÂ×ÊÔ´£¬³¢ÊÔÇ°Íù³ö¿Ú..." << endl;
 
-                // å…ˆå°è¯•é¿å¼€é™·é˜±çš„è·¯å¾„
+                // ÏÈ³¢ÊÔ±Ü¿ªÏİÚåµÄÂ·¾¶
                 auto path = findPathDFS(maze, playerPos, exitPos, true);
                 if (path.empty()) {
-                    cout << "æ— æ³•é¿å¼€é™·é˜±ï¼Œå°è¯•ç©¿è¶Šé™·é˜±è·¯å¾„..." << endl;
+                    cout << "ÎŞ·¨±Ü¿ªÏİÚå£¬³¢ÊÔ´©Ô½ÏİÚåÂ·¾¶..." << endl;
                     path = findPathDFS(maze, playerPos, exitPos, false);
                 }
 
                 if (!path.empty()) {
-                    cout << "æ‰¾åˆ°é€šå¾€å‡ºå£çš„è·¯å¾„ï¼Œè½¬å‘å‡ºå£..." << endl;
-                    // ä¼ é€’fullPathå‚æ•°
+                    cout << "ÕÒµ½Í¨Íù³ö¿ÚµÄÂ·¾¶£¬×ªÏò³ö¿Ú..." << endl;
+                    // ´«µİfullPath²ÎÊı
                     if (!moveToPosition(maze, playerPos, exitPos, totalScore, steps, visited, fullPath)) {
-                        // ç§»åŠ¨å¤±è´¥ï¼Œç»§ç»­å°è¯•
-                        cout << "ç§»åŠ¨å¤±è´¥ï¼Œç»§ç»­å°è¯•å…¶ä»–è·¯å¾„..." << endl;
+                        // ÒÆ¶¯Ê§°Ü£¬¼ÌĞø³¢ÊÔ
+                        cout << "ÒÆ¶¯Ê§°Ü£¬¼ÌĞø³¢ÊÔÆäËûÂ·¾¶..." << endl;
                     }
                 }
                 else {
-                    cout << "æ— å¯è¡Œè·¯å¾„ï¼" << endl;
+                    cout << "ÎŞ¿ÉĞĞÂ·¾¶£¡" << endl;
                     break;
                 }
             }
         }
 
-        // æ£€æŸ¥ç§»åŠ¨åæ˜¯å¦åˆ°è¾¾å‡ºå£
+        // ¼ì²éÒÆ¶¯ºóÊÇ·ñµ½´ï³ö¿Ú
         if (playerPos == exitPos) {
             break;
         }
@@ -530,11 +530,11 @@ void greedyResourceCollection(
 
 
 
-    cout << "æ¸¸æˆç»“æŸã€‚æ€»æ­¥æ•°: " << steps
-        << " æ€»å¾—åˆ†: " << totalScore
+    cout << "ÓÎÏ·½áÊø¡£×Ü²½Êı: " << steps
+        << " ×ÜµÃ·Ö: " << totalScore
         << endl;
 
-    // æ‰“å°å¸¦è·¯å¾„æ ‡è®°çš„è¿·å®«
+    // ´òÓ¡´øÂ·¾¶±ê¼ÇµÄÃÔ¹¬
     printMazeWithPath(maze, fullPath);
 }
 
@@ -557,11 +557,11 @@ int manhattanDistance(const pair<int, int>& a, const pair<int, int>& b) {
 }
 
 bool isPassable(char c) {
-    // å¢™ä¸å¯é€šè¡Œ
+    // Ç½²»¿ÉÍ¨ĞĞ
     if (c == '#') {
         return false;
     }
-    // å…¶ä»–ç±»å‹éƒ½å¯é€šè¡Œï¼ˆç©ºåœ°ã€é‡‘å¸ã€é™·é˜±ã€bossã€æœºå…³ç­‰ï¼‰
+    // ÆäËûÀàĞÍ¶¼¿ÉÍ¨ĞĞ£¨¿ÕµØ¡¢½ğ±Ò¡¢ÏİÚå¡¢boss¡¢»ú¹ØµÈ£©
     return true;
 }
 
@@ -569,13 +569,13 @@ bool tryUnlockLocker(vector<vector<MazeCell>>& maze,
     const pair<int, int>& pos,
     int& totalScore) {
 
-    cout << "å‘ç°æœºå…³ï¼Œå¼€å§‹è§£è°œ..." << endl;
+    cout << "·¢ÏÖ»ú¹Ø£¬¿ªÊ¼½âÃÕ..." << endl;
 
-    // å°è¯•è¯»å–å¯†ç çº¿ç´¢æ–‡ä»¶
+    // ³¢ÊÔ¶ÁÈ¡ÃÜÂëÏßË÷ÎÄ¼ş
     ifstream ifs2("pwd_000.json");
     if (!ifs2) {
-        cerr << "æ— æ³•æ‰“å¼€å¯†ç çº¿ç´¢æ–‡ä»¶" << endl;
-        cout << "æœºå…³è§£é”å¤±è´¥ï¼" << endl;
+        cerr << "ÎŞ·¨´ò¿ªÃÜÂëÏßË÷ÎÄ¼ş" << endl;
+        cout << "»ú¹Ø½âËøÊ§°Ü£¡" << endl;
         return false;
     }
 
@@ -584,34 +584,34 @@ bool tryUnlockLocker(vector<vector<MazeCell>>& maze,
     std::vector<std::vector<int>> clues = j2["C"].get<std::vector<std::vector<int>>>();
     std::string hashL = j2["L"].get<std::string>();
 
-    // è§£è°œå¯†ç 
+    // ½âÃÕÃÜÂë
     PasswordResult pwd_result = solve_password(clues, hashL);
 
     if (!pwd_result.password.empty()) {
-        std::cout << "\nã€è°œé¢˜ç³»ç»Ÿã€‘è‡ªåŠ¨æ¨ç†å¹¶éªŒè¯å¯†ç æˆåŠŸï¼" << std::endl;
-        // æ‰£åˆ†ï¼šæ¯æ¬¡å°è¯•æ‰£5åˆ†
+        std::cout << "\n¡¾ÃÕÌâÏµÍ³¡¿×Ô¶¯ÍÆÀí²¢ÑéÖ¤ÃÜÂë³É¹¦£¡" << std::endl;
+        // ¿Û·Ö£ºÃ¿´Î³¢ÊÔ¿Û5·Ö
         int penalty = pwd_result.tries;
-        std::cout << "æ­£ç¡®å¯†ç ä¸º: " << pwd_result.password << std::endl;
-        std::cout << "æ¨ç†å°è¯•æ¬¡æ•°: " << pwd_result.tries << std::endl;
+        std::cout << "ÕıÈ·ÃÜÂëÎª: " << pwd_result.password << std::endl;
+        std::cout << "ÍÆÀí³¢ÊÔ´ÎÊı: " << pwd_result.tries << std::endl;
 
         totalScore -= penalty;
-        cout << "æ‰£åˆ†: " << penalty << endl;
+        cout << "¿Û·Ö: " << penalty << endl;
 
-        // è§£é”åå˜ä¸ºé€šè·¯
+        // ½âËøºó±äÎªÍ¨Â·
         maze[pos.first][pos.second].type = ' ';
         return true;
     }
     else {
-        std::cout << "\nã€è°œé¢˜ç³»ç»Ÿã€‘å¯†ç æ¨ç†å¤±è´¥ï¼Œæœºå…³è§£é”å¤±è´¥ï¼" << std::endl;
+        std::cout << "\n¡¾ÃÕÌâÏµÍ³¡¿ÃÜÂëÍÆÀíÊ§°Ü£¬»ú¹Ø½âËøÊ§°Ü£¡" << std::endl;
         return false;
     }
 }
 
 
 
-// æ·»åŠ è·¯å¾„æ ‡è®°å‡½æ•°
+// Ìí¼ÓÂ·¾¶±ê¼Çº¯Êı
 void printMazeWithPath(const vector<vector<MazeCell>>& maze, const vector<pair<int, int>>& fullPath) {
-    // åˆ›å»ºè¿·å®«å‰¯æœ¬
+    // ´´½¨ÃÔ¹¬¸±±¾
     vector<vector<char>> mazeCopy(maze.size(), vector<char>(maze[0].size()));
     for (int i = 0; i < maze.size(); ++i) {
         for (int j = 0; j < maze[0].size(); ++j) {
@@ -619,7 +619,7 @@ void printMazeWithPath(const vector<vector<MazeCell>>& maze, const vector<pair<i
         }
     }
 
-    // æ ‡è®°è·¯å¾„
+    // ±ê¼ÇÂ·¾¶
     for (const auto& pos : fullPath) {
         if (mazeCopy[pos.first][pos.second] != 'S' &&
             mazeCopy[pos.first][pos.second] != 'E') {
@@ -627,8 +627,8 @@ void printMazeWithPath(const vector<vector<MazeCell>>& maze, const vector<pair<i
         }
     }
 
-    // æ‰“å°å¸¦è·¯å¾„æ ‡è®°çš„è¿·å®«
-    cout << "è·¯å¾„æ ‡è®°å›¾ (* è¡¨ç¤ºè·¯å¾„):" << endl;
+    // ´òÓ¡´øÂ·¾¶±ê¼ÇµÄÃÔ¹¬
+    cout << "Â·¾¶±ê¼ÇÍ¼ (* ±íÊ¾Â·¾¶):" << endl;
     for (int i = 0; i < mazeCopy.size(); ++i) {
         for (int j = 0; j < mazeCopy[0].size(); ++j) {
             cout << mazeCopy[i][j] << ' ';
@@ -652,71 +652,71 @@ void exploreDFS(
     vector<vector<bool>> explored(n, vector<bool>(n, false));
     vector<vector<bool>> visitedInDFS(n, vector<bool>(n, false));
 
-    // æ–¹å‘æ•°ç»„
+    // ·½ÏòÊı×é
     vector<pair<int, int>> directions = { {-1,0}, {1,0}, {0,-1}, {0,1} };
 
     s.push(playerPos);
     explored[playerPos.first][playerPos.second] = true;
     visitedInDFS[playerPos.first][playerPos.second] = true;
 
-    // åˆå§‹åŒ–æ–°èµ„æºæ ‡å¿—
+    // ³õÊ¼»¯ĞÂ×ÊÔ´±êÖ¾
     newResourceFound = false;
 
     while (!s.empty()) {
         auto curr = s.top();
         s.pop();
 
-        // ç§»åŠ¨åˆ°å½“å‰ä½ç½®
+        // ÒÆ¶¯µ½µ±Ç°Î»ÖÃ
         if (curr != playerPos) {
             playerPos = curr;
             steps++;
             fullPath.push_back(playerPos);
 
-            // æ ‡è®°ä¸ºå·²è®¿é—®ï¼ˆå…¨å±€ï¼‰
+            // ±ê¼ÇÎªÒÑ·ÃÎÊ£¨È«¾Ö£©
             string posKey = to_string(playerPos.first) + "," + to_string(playerPos.second);
             visited.insert(posKey);
 
-            // === å…³é”®ä¿®æ”¹ï¼šåªæ£€æµ‹èµ„æºä½†ä¸æ”¶é›† ===
+            // === ¹Ø¼üĞŞ¸Ä£ºÖ»¼ì²â×ÊÔ´µ«²»ÊÕ¼¯ ===
             char cellType = maze[playerPos.first][playerPos.second].type;
             if (cellType == 'G' || cellType == 'B') {
-                // ä»…è®¾ç½®æ ‡å¿—ï¼Œä¸å®é™…æ”¶é›†èµ„æº
+                // ½öÉèÖÃ±êÖ¾£¬²»Êµ¼ÊÊÕ¼¯×ÊÔ´
                 newResourceFound = true;
-                cout << "å‘ç°èµ„æº '" << cellType << "' åœ¨ä½ç½® ("
+                cout << "·¢ÏÖ×ÊÔ´ '" << cellType << "' ÔÚÎ»ÖÃ ("
                     << playerPos.first << ", " << playerPos.second << ")"
                     << endl;
             }
-            // === æ–°å¢ï¼šå¤„ç†é™·é˜± ===
+            // === ĞÂÔö£º´¦ÀíÏİÚå ===
             else if (cellType == 'T') {
                 int value = getResourceValue(cellType);
                 totalScore += value;
-                cout << "è§¦å‘é™·é˜±ï¼ŒæŸå¤± " << (-value) << " åˆ†ã€‚";
-                maze[playerPos.first][playerPos.second].type = ' '; // é™·é˜±è§¦å‘åç§»é™¤
-                cout << " å½“å‰ä½ç½®: (" << playerPos.first << ", " << playerPos.second << ")"
-                    << " æ€»å¾—åˆ†: " << totalScore
+                cout << "´¥·¢ÏİÚå£¬ËğÊ§ " << (-value) << " ·Ö¡£";
+                maze[playerPos.first][playerPos.second].type = ' '; // ÏİÚå´¥·¢ºóÒÆ³ı
+                cout << " µ±Ç°Î»ÖÃ: (" << playerPos.first << ", " << playerPos.second << ")"
+                    << " ×ÜµÃ·Ö: " << totalScore
                     << endl;
             }
             else if (cellType == 'L') {
-                // åªæœ‰åœ¨æ²¡æœ‰å…¶ä»–è·¯å¾„æ—¶æ‰å°è¯•è§£è°œ
+                // Ö»ÓĞÔÚÃ»ÓĞÆäËûÂ·¾¶Ê±²Å³¢ÊÔ½âÃÕ
                 bool unlocked = tryUnlockLocker(maze, playerPos, totalScore);
                 if (unlocked) {
-                    cout << "æœºå…³å·²è§£é”ï¼Œå˜ä¸ºé€šè·¯ã€‚";
+                    cout << "»ú¹ØÒÑ½âËø£¬±äÎªÍ¨Â·¡£";
                     maze[playerPos.first][playerPos.second].type = ' ';
                 }
                 else {
-                    // è§£è°œå¤±è´¥æ—¶ï¼Œç§»é™¤DFSæ¢ç´¢æ ‡è®°
+                    // ½âÃÕÊ§°ÜÊ±£¬ÒÆ³ıDFSÌ½Ë÷±ê¼Ç
                     explored[playerPos.first][playerPos.second] = false;
                     visitedInDFS[playerPos.first][playerPos.second] = false;
                 }
             }
         }
 
-        // å¦‚æœåˆ°è¾¾å‡ºå£
+        // Èç¹ûµ½´ï³ö¿Ú
         if (playerPos == exitPos) {
-            cout << "DFSæ¢ç´¢ä¸­å‘ç°å‡ºå£ä½ç½®" << endl;
+            cout << "DFSÌ½Ë÷ÖĞ·¢ÏÖ³ö¿ÚÎ»ÖÃ" << endl;
             return;
         }
 
-        // æ£€æŸ¥è§†é‡å†…æ˜¯å¦æœ‰æ–°èµ„æºï¼ˆé‡‘å¸æˆ–Bossï¼‰
+        // ¼ì²éÊÓÒ°ÄÚÊÇ·ñÓĞĞÂ×ÊÔ´£¨½ğ±Ò»òBoss£©
         auto currentResources = getVisibleResources(maze, playerPos, 1);
         vector<pair<pair<int, int>, char>> filteredResources;
         for (const auto& res : currentResources) {
@@ -725,17 +725,17 @@ void exploreDFS(
             }
         }
         if (!filteredResources.empty()) {
-            cout << "å‘ç°è§†é‡å†…èµ„æºï¼Œä¸­æ–­æ·±åº¦æœç´¢ï¼" << endl;
+            cout << "·¢ÏÖÊÓÒ°ÄÚ×ÊÔ´£¬ÖĞ¶ÏÉî¶ÈËÑË÷£¡" << endl;
             newResourceFound = true;
             return;
         }
 
-        // æ¢ç´¢æ‰€æœ‰æœªè®¿é—®çš„ç›¸é‚»ä½ç½®
+        // Ì½Ë÷ËùÓĞÎ´·ÃÎÊµÄÏàÁÚÎ»ÖÃ
         bool foundUnvisited = false;
         vector<pair<int, int>> shuffled = directions;
         random_shuffle(shuffled.begin(), shuffled.end());
 
-        // é¦–å…ˆå°è¯•éé™·é˜±è·¯å¾„
+        // Ê×ÏÈ³¢ÊÔ·ÇÏİÚåÂ·¾¶
         for (const auto& dir : shuffled) {
             int nx = playerPos.first + dir.first;
             int ny = playerPos.second + dir.second;
@@ -744,7 +744,7 @@ void exploreDFS(
                 !explored[nx][ny] &&
                 isPassable(maze[nx][ny].type)) {
 
-                // é¿å¼€é™·é˜±å’Œæœºå…³
+                // ±Ü¿ªÏİÚåºÍ»ú¹Ø
                 if (maze[nx][ny].type == 'T' || maze[nx][ny].type == 'L')
                     continue;
 
@@ -758,9 +758,9 @@ void exploreDFS(
             }
         }
 
-        // === ä¿®æ”¹ï¼šå¦‚æœæ²¡æœ‰éé™·é˜±è·¯å¾„ï¼Œä¼˜å…ˆè€ƒè™‘æœºå…³ ===
+        // === ĞŞ¸Ä£ºÈç¹ûÃ»ÓĞ·ÇÏİÚåÂ·¾¶£¬ÓÅÏÈ¿¼ÂÇ»ú¹Ø ===
         if (!foundUnvisited) {
-            // ä¼˜å…ˆè€ƒè™‘æœºå…³ä½ç½®
+            // ÓÅÏÈ¿¼ÂÇ»ú¹ØÎ»ÖÃ
             for (const auto& dir : shuffled) {
                 int nx = playerPos.first + dir.first;
                 int ny = playerPos.second + dir.second;
@@ -768,7 +768,7 @@ void exploreDFS(
                 if (nx >= 0 && nx < n && ny >= 0 && ny < n &&
                     !explored[nx][ny] &&
                     isPassable(maze[nx][ny].type) &&
-                    maze[nx][ny].type == 'L') { // åªè€ƒè™‘æœºå…³
+                    maze[nx][ny].type == 'L') { // Ö»¿¼ÂÇ»ú¹Ø
 
                     if (!visitedInDFS[nx][ny]) {
                         parent[nx][ny] = playerPos;
@@ -776,12 +776,12 @@ void exploreDFS(
                         visitedInDFS[nx][ny] = true;
                         s.push({ nx, ny });
                         foundUnvisited = true;
-                        cout << "æ— å®‰å…¨è·¯å¾„ï¼Œä¼˜å…ˆé€‰æ‹©æœºå…³ä½ç½® (" << nx << ", " << ny << ")" << endl;
+                        cout << "ÎŞ°²È«Â·¾¶£¬ÓÅÏÈÑ¡Ôñ»ú¹ØÎ»ÖÃ (" << nx << ", " << ny << ")" << endl;
                     }
                 }
             }
 
-            // å¦‚æœæ²¡æœ‰æ‰¾åˆ°æœºå…³ï¼Œå†è€ƒè™‘é™·é˜±
+            // Èç¹ûÃ»ÓĞÕÒµ½»ú¹Ø£¬ÔÙ¿¼ÂÇÏİÚå
             if (!foundUnvisited) {
                 for (const auto& dir : shuffled) {
                     int nx = playerPos.first + dir.first;
@@ -790,7 +790,7 @@ void exploreDFS(
                     if (nx >= 0 && nx < n && ny >= 0 && ny < n &&
                         !explored[nx][ny] &&
                         isPassable(maze[nx][ny].type) &&
-                        maze[nx][ny].type == 'T') { // åªè€ƒè™‘é™·é˜±
+                        maze[nx][ny].type == 'T') { // Ö»¿¼ÂÇÏİÚå
 
                         if (!visitedInDFS[nx][ny]) {
                             parent[nx][ny] = playerPos;
@@ -798,24 +798,24 @@ void exploreDFS(
                             visitedInDFS[nx][ny] = true;
                             s.push({ nx, ny });
                             foundUnvisited = true;
-                            cout << "æ— å®‰å…¨è·¯å¾„ï¼Œé€‰æ‹©é™·é˜±ä½ç½® (" << nx << ", " << ny << ")" << endl;
+                            cout << "ÎŞ°²È«Â·¾¶£¬Ñ¡ÔñÏİÚåÎ»ÖÃ (" << nx << ", " << ny << ")" << endl;
                         }
                     }
                 }
             }
         }
 
-        // å›æº¯é€»è¾‘
+        // »ØËİÂß¼­
         if (!foundUnvisited && !s.empty()) {
             playerPos = s.top();
             steps++;
             fullPath.push_back(playerPos);
-            cout << "å›æº¯åˆ°ä½ç½®: (" << playerPos.first << ", " << playerPos.second << ")" << endl;
+            cout << "»ØËİµ½Î»ÖÃ: (" << playerPos.first << ", " << playerPos.second << ")" << endl;
         }
     }
 
-    //// è¶…æ—¶ä¿æŠ¤
+    //// ³¬Ê±±£»¤
     //if (steps > 1000) {
-    //    cout << "DFSæ¢ç´¢è¶…æ—¶ï¼Œå¼ºåˆ¶é€€å‡º" << endl;
+    //    cout << "DFSÌ½Ë÷³¬Ê±£¬Ç¿ÖÆÍË³ö" << endl;
     //}
 }
