@@ -170,6 +170,7 @@
   <ItemGroup>
     <None Include="boss_case.json" />
     <None Include="maze.json" />
+    <None Include="pwd_000.json" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="bejing.png" />
