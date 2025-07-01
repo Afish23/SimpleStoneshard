@@ -13,15 +13,6 @@
 #include <cstdlib>
 using namespace std;
 
-// 假设正确密码
-vector<int> target = { 7, 5, 2 };
-// 根据正确密码给出线索
-vector<vector<int>> clues = {
-    {-1, -1},        // 每位素数且不重复
-    {3, 0},          // 第三位偶数
-    {-1, 5, -1}      // 第二位是5
-};
-
 int main() {
     srand(time(0));
     while (true) {
@@ -63,7 +54,6 @@ int main() {
             }
 
             auto maze = MazeGenerator::generateMaze(n, goldCount, trapCount, lockerCount, bossCount, startPos, exitPos);
-
             cout << "\n生成的迷宫如下：\n";
             MazeGenerator::printMaze(maze);
             MazeGenerator::writeMazeToJson(maze, "maze.json");
@@ -183,9 +173,25 @@ int main() {
                     //printf("%s\n", step.c_str());
                 //}
                 // 自动可视化播放整个战斗流程
-                fightBossVisualAuto(bossHps, skills, result.second);
+                //fightBossVisualAuto(bossHps, skills, result.second);
 
+                //解密过程
+                ifstream ifs2("pwd_000.json"); // 或别的含有C和L的json文件
+                nlohmann::json j2;
+                ifs2 >> j2;
+                std::vector<std::vector<int>> clues = j2["C"].get<std::vector<std::vector<int>>>();
+                std::string hashL = j2["L"].get<std::string>();
 
+                PasswordResult pwd_result = solve_password(clues, hashL);
+                if (!pwd_result.password.empty()) {
+                    std::cout << "\n【谜题系统】自动推理并验证密码成功！" << std::endl;
+                    std::cout << "正确密码为: " << pwd_result.password << std::endl;
+                    std::cout << "推理尝试次数: " << pwd_result.tries << std::endl;
+                }
+                else {
+                    std::cout << "\n【谜题系统】密码推理失败，请检查线索或数据。" << std::endl;
+                }
+ 
             }
             else {
                 cout << "\n未找到有效路径！" << endl;
@@ -207,4 +213,4 @@ int main() {
 
     }
         return 0; 
-    }
+}
