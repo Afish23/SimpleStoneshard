@@ -73,8 +73,9 @@ vector<pair<pair<int, int>, char>> getVisibleResources(
 vector<pair<int, int>> findPathDFS(
     const vector<vector<MazeCell>>& maze,
     const pair<int, int>& start,
-    const pair<int, int>& end) {
-
+    const pair<int, int>& end,
+    bool avoidTraps = true)  // 添加参数控制是否避开陷阱
+{
     int n = maze.size();
     vector<vector<bool>> visited(n, vector<bool>(n, false));
     vector<vector<pair<int, int>>> parent(n, vector<pair<int, int>>(n, { -1, -1 }));
@@ -108,12 +109,20 @@ vector<pair<int, int>> findPathDFS(
 
             // 检查边界和是否可通行
             if (nx >= 0 && nx < n && ny >= 0 && ny < n &&
-                !visited[nx][ny] &&
-                isPassable(maze[nx][ny].type)) {
+                !visited[nx][ny]) {
 
-                visited[nx][ny] = true;
-                parent[nx][ny] = curr;
-                s.push({ nx, ny });
+                char cellType = maze[nx][ny].type;
+
+                // 根据参数决定是否避开陷阱
+                if (avoidTraps && cellType == 'T') {
+                    continue; // 避开陷阱
+                }
+
+                if (isPassable(cellType)) {
+                    visited[nx][ny] = true;
+                    parent[nx][ny] = curr;
+                    s.push({ nx, ny });
+                }
             }
         }
     }
@@ -180,8 +189,51 @@ bool moveToPosition(
 
     if (!found) {
         cout << "无法到达目标位置 (" << target.first << ", " << target.second << ")" << endl;
+
+        // 尝试不避开陷阱的路径
+        cout << "尝试穿越陷阱路径..." << endl;
+        auto trapPath = findPathDFS(maze, playerPos, target, false);
+
+        if (!trapPath.empty()) {
+            cout << "找到穿越陷阱路径，共" << trapPath.size() << "步" << endl;
+
+            // 沿路径移动
+            for (const auto& nextPos : trapPath) {
+                playerPos = nextPos;
+                steps++;
+                fullPath.push_back(playerPos);
+
+                // 处理当前位置的单元格
+                char cellType = maze[playerPos.first][playerPos.second].type;
+                if (cellType == 'G' || cellType == 'T') {
+                    int value = getResourceValue(cellType);
+                    totalScore += value;
+
+                    if (cellType == 'T') {
+                        cout << "触发陷阱，损失 " << (-value) << " 分。";
+                    }
+                    else {
+                        cout << "收集资源 '" << cellType << "' 获得 " << value << " 分。";
+                    }
+                    maze[playerPos.first][playerPos.second].type = ' ';
+                }
+                // ... (其他类型处理不变)
+
+                cout << " 当前位置: (" << playerPos.first << ", " << playerPos.second << ")"
+                    << " 总得分: " << totalScore
+                    << endl;
+
+                // 检查是否到达目标
+                if (playerPos == target) {
+                    return true;
+                }
+            }
+            return true;
+        }
+
         return false;
     }
+
 
     // 重建路径（修复路径重建逻辑）
     vector<pair<int, int>> path;
@@ -320,7 +372,13 @@ void greedyResourceCollection(
                 cout << "移动失败，尝试寻找其他路径..." << endl;
 
                 // 如果移动失败，尝试寻找出口
-                auto path = findPathDFS(maze, playerPos, exitPos);
+                // 先尝试避开陷阱的路径
+                auto path = findPathDFS(maze, playerPos, exitPos, true);
+                if (path.empty()) {
+                    cout << "无法避开陷阱，尝试穿越陷阱路径..." << endl;
+                    path = findPathDFS(maze, playerPos, exitPos, false);
+                }
+
                 if (!path.empty()) {
                     cout << "找到替代路径，转向出口..." << endl;
                     // 传递fullPath参数
@@ -338,8 +396,14 @@ void greedyResourceCollection(
         else {
             cout << "视野内无资源，转入深度搜索模式..." << endl;
 
-            // 使用DFS寻找出口路径
-            vector<pair<int, int>> path = findPathDFS(maze, playerPos, exitPos);
+            // 首先尝试避开陷阱的路径
+            vector<pair<int, int>> path = findPathDFS(maze, playerPos, exitPos, true);
+
+            // 如果找不到避开陷阱的路径，尝试穿越陷阱
+            if (path.empty()) {
+                cout << "无法避开陷阱，尝试穿越陷阱路径..." << endl;
+                path = findPathDFS(maze, playerPos, exitPos, false);
+            }
 
             if (path.empty()) {
                 cout << "无法找到通往出口的路径！" << endl;
