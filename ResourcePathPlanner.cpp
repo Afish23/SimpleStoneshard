@@ -25,6 +25,7 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
     const std::vector<std::vector<MazeCell>>& maze,
     std::pair<int, int> start,
     std::pair<int, int> exit)
+    
 {
     Result result;
     int n = maze.size();
@@ -37,10 +38,10 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
         for (int j = 0; j < n; ++j)
             if (maze[i][j].type == GOLD || maze[i][j].type == TRAP)
                 special_id[{i, j}] = spnum++;
-    if (spnum > 20) {
+    /*if (spnum > 20) {
         std::cerr << "金币+陷阱过多（" << spnum << "），不适合状态压缩写法！" << std::endl;
         return result;
-    }
+    }*/
 
     struct State {
         int value, steps;
@@ -70,9 +71,9 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
                 if (!(nmask & (1 << id))) {
                     nmask |= (1 << id);
                     if (maze[nx][ny].type == GOLD)
-                        add += 5;
+                        add += 50;
                     else if (maze[nx][ny].type == TRAP)
-                        add -= 3;
+                        add -= 30;
                 }
             }
             int nvalue = s.value + add;
@@ -110,12 +111,12 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
     std::vector<std::pair<int, int>> path;
     int x = exit.first, y = exit.second;
     int mask = bestMask;
-
+    int length = 0;
     // 从终点回溯到起点
     while (x != -1 || y != -1) {  // 使用(-1,-1)作为起点前驱的终止条件
         // 添加当前节点到路径
         path.push_back({ x, y });
-
+        length++;
         // 获取当前状态
         State& s = dp[x][y][mask];
 
@@ -130,7 +131,7 @@ ResourcePathPlanner::Result ResourcePathPlanner::findOptimalPath(
         y = s.prev.second;
         mask = nextMask;
     }
-
+    cout << "路径长度为：" << length << endl;
     // 反转路径（当前是从终点到起点）
     std::reverse(path.begin(), path.end());
 
