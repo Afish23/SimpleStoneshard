@@ -113,9 +113,14 @@ vector<pair<int, int>> findPathDFS(
 
                 char cellType = maze[nx][ny].type;
 
-                // 根据参数决定是否避开陷阱
-                if (avoidTraps && cellType == 'T') {
-                    continue; // 避开陷阱
+                // 根据参数决定是否避开陷阱和机关
+                if (avoidTraps) {
+                    if (cellType == 'T' || cellType == 'L') {
+                        // 除非是终点，否则避开
+                        if (nx != end.first || ny != end.second) {
+                            continue;
+                        }
+                    }
                 }
 
                 if (isPassable(cellType)) {
@@ -179,7 +184,14 @@ bool moveToPosition(
 
             if (nx >= 0 && nx < n && ny >= 0 && ny < n &&
                 !visitedMap[nx][ny] &&
-                isPassable(maze[nx][ny].type)) {
+                isPassable(maze[nx][ny].type))
+            {
+                // 避开非目标位置的陷阱和机关
+                if ((maze[nx][ny].type == 'T' || maze[nx][ny].type == 'L') &&
+                    (nx != target.first || ny != target.second))
+                {
+                    continue;
+                }
 
                 visitedMap[nx][ny] = true;
                 parent[nx][ny] = curr;
@@ -364,7 +376,7 @@ void greedyResourceCollection(
         // 修改：过滤掉陷阱，只考虑金币和Boss
         vector<pair<pair<int, int>, char>> filteredResources;
         for (const auto& res : visibleResources) {
-            if (res.second != 'T') { // 排除陷阱
+            if (res.second != 'T' && res.second != 'L') { // 排除陷阱和机关
                 filteredResources.push_back(res);
             }
         }
@@ -443,7 +455,7 @@ void greedyResourceCollection(
                 // 过滤掉陷阱，只考虑金币和Boss
                 vector<pair<pair<int, int>, char>> filteredResources;
                 for (const auto& res : visibleResources) {
-                    if (res.second != 'T') { // 排除陷阱
+                    if (res.second != 'T' && res.second != 'L') { // 排除陷阱和机关
                         filteredResources.push_back(res);
                     }
                 }
@@ -684,6 +696,7 @@ void exploreDFS(
                     << endl;
             }
             else if (cellType == 'L') {
+                // 只有在没有其他路径时才尝试解谜
                 bool unlocked = tryUnlockLocker(maze, playerPos, totalScore);
                 if (unlocked) {
                     cout << "机关已解锁，变为通路。";
@@ -731,8 +744,9 @@ void exploreDFS(
                 !explored[nx][ny] &&
                 isPassable(maze[nx][ny].type)) {
 
-                // 避开陷阱（先尝试非陷阱路径）
-                if (maze[nx][ny].type == 'T') continue;
+                // 避开陷阱和机关
+                if (maze[nx][ny].type == 'T' || maze[nx][ny].type == 'L')
+                    continue;
 
                 if (!visitedInDFS[nx][ny]) {
                     parent[nx][ny] = playerPos;
@@ -744,18 +758,17 @@ void exploreDFS(
             }
         }
 
-        // === 新增：如果没有非陷阱路径，考虑陷阱 ===
+        // === 修改：如果没有非陷阱路径，优先考虑机关 ===
         if (!foundUnvisited) {
+            // 优先考虑机关位置
             for (const auto& dir : shuffled) {
                 int nx = playerPos.first + dir.first;
                 int ny = playerPos.second + dir.second;
 
                 if (nx >= 0 && nx < n && ny >= 0 && ny < n &&
                     !explored[nx][ny] &&
-                    isPassable(maze[nx][ny].type)) {
-
-                    // 只考虑陷阱
-                    if (maze[nx][ny].type != 'T') continue;
+                    isPassable(maze[nx][ny].type) &&
+                    maze[nx][ny].type == 'L') { // 只考虑机关
 
                     if (!visitedInDFS[nx][ny]) {
                         parent[nx][ny] = playerPos;
@@ -763,7 +776,30 @@ void exploreDFS(
                         visitedInDFS[nx][ny] = true;
                         s.push({ nx, ny });
                         foundUnvisited = true;
-                        cout << "无安全路径，选择陷阱位置 (" << nx << ", " << ny << ")" << endl;
+                        cout << "无安全路径，优先选择机关位置 (" << nx << ", " << ny << ")" << endl;
+                    }
+                }
+            }
+
+            // 如果没有找到机关，再考虑陷阱
+            if (!foundUnvisited) {
+                for (const auto& dir : shuffled) {
+                    int nx = playerPos.first + dir.first;
+                    int ny = playerPos.second + dir.second;
+
+                    if (nx >= 0 && nx < n && ny >= 0 && ny < n &&
+                        !explored[nx][ny] &&
+                        isPassable(maze[nx][ny].type) &&
+                        maze[nx][ny].type == 'T') { // 只考虑陷阱
+
+                        if (!visitedInDFS[nx][ny]) {
+                            parent[nx][ny] = playerPos;
+                            explored[nx][ny] = true;
+                            visitedInDFS[nx][ny] = true;
+                            s.push({ nx, ny });
+                            foundUnvisited = true;
+                            cout << "无安全路径，选择陷阱位置 (" << nx << ", " << ny << ")" << endl;
+                        }
                     }
                 }
             }
