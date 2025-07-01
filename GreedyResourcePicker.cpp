@@ -1,4 +1,4 @@
-﻿#include "GreedyResourcePicker.h"
+#include "GreedyResourcePicker.h"
 
 
 // 触发Boss战的通用函数（新增）
