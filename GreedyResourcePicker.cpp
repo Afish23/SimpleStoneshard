@@ -31,10 +31,11 @@ void triggerBossFight(
     // 计算最优技能释放顺序
     BossFightStrategy bfs;
     auto result = bfs.minTurnSkillSequence(bossHps, skills);
-
+    int turnsUsed = result.first; // 获取实际使用的回合数
     // 自动可视化播放整个战斗流程
     fightBossVisualAuto(bossHps, skills, result.second);
-
+    totalScore -= turnsUsed; // 每个回合扣1分
+    cout << "Boss战消耗 " << turnsUsed << " 回合，扣除 " << turnsUsed << " 分！" << endl;
     maze[playerPos.first][playerPos.second].type = ' '; // boss被击败后变为通路
     cout << "成功击败boss！当前位置: (" << playerPos.first << ", " << playerPos.second << ")"
         << " 总得分: " << totalScore << endl;
