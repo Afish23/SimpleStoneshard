@@ -594,6 +594,7 @@ bool tryUnlockLocker(vector<vector<MazeCell>>& maze,
         std::cout << "正确密码为: " << pwd_result.password << std::endl;
         std::cout << "推理尝试次数: " << pwd_result.tries << std::endl;
 
+        penalty -= 1;
         totalScore -= penalty;
         cout << "扣分: " << penalty << endl;
 
