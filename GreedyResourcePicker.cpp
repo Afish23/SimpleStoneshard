@@ -693,7 +693,7 @@ void exploreDFS(
     explored[playerPos.first][playerPos.second] = true;
     visitedInDFS[playerPos.first][playerPos.second] = true;
 
-    // +++ 新增：输出开始信息 +++
+    // 输出开始信息
     cout << "【DFS开始】从位置(" << playerPos.first << ", " << playerPos.second << ")\n";
 
     // 初始化新资源标志
@@ -703,7 +703,7 @@ void exploreDFS(
         auto curr = s.top();
         s.pop();
 
-        // +++ 新增：输出当前位置信息 +++
+        // 输出当前位置信息
         cout << "【DFS位置】当前: (" << curr.first << ", " << curr.second << ")";
         if (curr != playerPos) {
             cout << " (回溯)" << endl;
@@ -722,7 +722,7 @@ void exploreDFS(
             string posKey = to_string(playerPos.first) + "," + to_string(playerPos.second);
             visited.insert(posKey);
 
-            // +++ 新增：输出移动信息 +++
+            // 输出移动信息
             cout << "  -> 移动到(" << playerPos.first << ", " << playerPos.second << ")";
             cout << " 步数: " << steps << endl;
 
@@ -782,7 +782,7 @@ void exploreDFS(
         vector<pair<int, int>> shuffled = directions;
         random_shuffle(shuffled.begin(), shuffled.end());
 
-        // +++ 新增：输出邻居探索信息 +++
+        // 输出邻居探索信息
         cout << "  探索邻居: ";
 
         // 首先尝试非陷阱路径
@@ -859,14 +859,62 @@ void exploreDFS(
         }
         cout << endl; // 结束邻居输出
 
-        // 回溯逻辑
+        // 回溯逻辑 - 详细输出每一步
         if (!foundUnvisited && !s.empty()) {
             auto next = s.top();
-            cout << "【回溯】从(" << playerPos.first << "," << playerPos.second
-                << ") 到 (" << next.first << "," << next.second << ")\n";
+
+            // 输出回溯信息
+            cout << "【回溯开始】从(" << playerPos.first << "," << playerPos.second
+                << ") 到 (" << next.first << "," << next.second << ")" << endl;
+
+            // 计算回溯路径
+            vector<pair<int, int>> backtrackPath;
+            pair<int, int> current = playerPos;
+
+            // 重建从当前位置到回溯目标位置的路径
+            while (current != next) {
+                // 获取当前节点的父节点
+                pair<int, int> parentPos = parent[current.first][current.second];
+
+                // 确保父节点有效
+                if (parentPos.first == -1 && parentPos.second == -1) {
+                    cout << "  【警告】找不到从(" << current.first << "," << current.second
+                        << ")到(" << next.first << "," << next.second << ")的路径" << endl;
+                    break;
+                }
+
+                // 添加父节点到回溯路径
+                backtrackPath.push_back(parentPos);
+                current = parentPos;
+            }
+
+            // 沿回溯路径移动
+            for (const auto& pos : backtrackPath) {
+                playerPos = pos;
+                steps++;
+                fullPath.push_back(playerPos);
+
+                // 输出每一步回溯
+                cout << "  -> 回溯到(" << playerPos.first << "," << playerPos.second << ")";
+                cout << " 步数: " << steps << endl;
+
+                // 处理回溯过程中可能遇到的陷阱
+                char cellType = maze[playerPos.first][playerPos.second].type;
+                if (cellType == 'T') {
+                    int value = getResourceValue(cellType);
+                    totalScore += value;
+                    cout << "  触发陷阱，损失 " << (-value) << " 分。" << endl;
+                    maze[playerPos.first][playerPos.second].type = ' ';
+                }
+            }
+
+            // 更新探索状态
+            explored[playerPos.first][playerPos.second] = true;
+            visitedInDFS[playerPos.first][playerPos.second] = true;
+
+            cout << "【回溯结束】到达目标位置(" << playerPos.first << "," << playerPos.second << ")" << endl;
         }
     }
 
-    // +++ 新增：输出结束信息 +++
     cout << "【DFS结束】栈已空，搜索完成\n";
 }
