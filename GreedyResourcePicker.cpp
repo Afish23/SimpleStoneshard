@@ -204,7 +204,7 @@ bool moveToPosition(
         cout << "无法到达目标位置 (" << target.first << ", " << target.second << ")" << endl;
 
         // 优先尝试穿过机关的路径（避开陷阱）
-        cout << "优先尝试穿过机关的路径..." << endl;
+        cout << "优先尝试穿过机关的路径（..." << endl;
         vector<pair<int, int>> lockPath;
 
         // 使用自定义逻辑生成避开陷阱但允许机关的路径
