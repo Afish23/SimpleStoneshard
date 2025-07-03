@@ -148,7 +148,6 @@ vector<pair<int, int>> findPathDFS(
 }
 
 // 移动函数（添加机关扣分）
-
 bool moveToPosition(
     vector<vector<MazeCell>>& maze,
     pair<int, int>& playerPos,
@@ -204,22 +203,77 @@ bool moveToPosition(
     if (!found) {
         cout << "无法到达目标位置 (" << target.first << ", " << target.second << ")" << endl;
 
-        // 尝试不避开陷阱的路径
-        cout << "尝试穿越陷阱路径..." << endl;
-        auto trapPath = findPathDFS(maze, playerPos, target, false);
+        // 优先尝试穿过机关的路径（避开陷阱）
+        cout << "优先尝试穿过机关的路径..." << endl;
+        vector<pair<int, int>> lockPath;
 
-        if (!trapPath.empty()) {
-            cout << "找到穿越陷阱路径，共" << trapPath.size() << "步" << endl;
+        // 使用自定义逻辑生成避开陷阱但允许机关的路径
+        vector<pair<int, int>> directions = { {-1,0}, {1,0}, {0,-1}, {0,1} };
+        vector<vector<bool>> visitedDFS(n, vector<bool>(n, false));
+        vector<vector<pair<int, int>>> parentDFS(n, vector<pair<int, int>>(n, { -1, -1 }));
+        stack<pair<int, int>> s;
+
+        visitedDFS[playerPos.first][playerPos.second] = true;
+        s.push(playerPos);
+
+        bool foundLockPath = false;
+
+        while (!s.empty()) {
+            auto curr = s.top();
+            s.pop();
+
+            if (curr == target) {
+                foundLockPath = true;
+                break;
+            }
+
+            vector<pair<int, int>> shuffled = directions;
+            random_shuffle(shuffled.begin(), shuffled.end());
+
+            for (const auto& dir : shuffled) {
+                int nx = curr.first + dir.first;
+                int ny = curr.second + dir.second;
+
+                if (nx >= 0 && nx < n && ny >= 0 && ny < n &&
+                    !visitedDFS[nx][ny] &&
+                    isPassable(maze[nx][ny].type)) {
+
+                    // 避开陷阱（除非是目标位置）
+                    if (maze[nx][ny].type == 'T' &&
+                        (nx != target.first || ny != target.second)) {
+                        continue;
+                    }
+
+                    // 允许通过机关
+                    visitedDFS[nx][ny] = true;
+                    parentDFS[nx][ny] = curr;
+                    s.push({ nx, ny });
+                }
+            }
+        }
+
+        // 重建机关路径
+        if (foundLockPath) {
+            pair<int, int> curr = target;
+            while (curr != playerPos) {
+                lockPath.push_back(curr);
+                curr = parentDFS[curr.first][curr.second];
+            }
+            reverse(lockPath.begin(), lockPath.end());
+        }
+
+        if (!lockPath.empty()) {
+            cout << "找到穿过机关的路径，共" << lockPath.size() << "步" << endl;
 
             // 沿路径移动
-            for (const auto& nextPos : trapPath) {
+            for (const auto& nextPos : lockPath) {
                 playerPos = nextPos;
                 steps++;
                 fullPath.push_back(playerPos);
 
                 // 处理当前位置的单元格
                 char cellType = maze[playerPos.first][playerPos.second].type;
-                
+
                 if (cellType == 'G' || cellType == 'T') {
                     int value = getResourceValue(cellType);
                     totalScore += value;
@@ -245,7 +299,90 @@ bool moveToPosition(
                         << " 总得分: " << totalScore << endl;
                 }
                 // ===== 结束添加 =====
-                // // ===== 新增：视野内资源检测和收集 =====
+                // ===== 新增：视野内资源检测和收集 =====
+                auto visibleResources = getVisibleResources(maze, playerPos, 1);
+                for (const auto& res : visibleResources) {
+                    pair<int, int> resPos = res.first;
+                    char resType = res.second;
+                    string posKey = to_string(resPos.first) + "," + to_string(resPos.second);
+
+                    // 跳过已访问过的资源
+                    if (visited.find(posKey) != visited.end()) continue;
+
+                    // 收集金币
+                    if (resType == 'G') {
+                        int value = getResourceValue(resType);
+                        totalScore += value;
+                        maze[resPos.first][resPos.second].type = ' '; // 移除金币
+                        visited.insert(posKey); // 标记为已访问
+
+                        cout << "发现并收集视野内金币("
+                            << resPos.first << "," << resPos.second
+                            << ") 获得" << value << "分！";
+                    }
+                    // 标记Boss位置（不立即触发）
+                    else if (resType == 'B') {
+                        cout << "发现Boss位置("
+                            << resPos.first << "," << resPos.second << ")!";
+                    }
+                }
+                // ===== 结束新增 =====
+                // ... (其他类型处理不变)
+
+                cout << " 当前位置: (" << playerPos.first << ", " << playerPos.second << ")"
+                    << " 总得分: " << totalScore
+                    << endl;
+
+                // 检查是否到达目标
+                if (playerPos == target) {
+                    return true;
+                }
+            }
+            return true;
+        }
+
+        // 如果穿过机关的路径不可行，再尝试穿过陷阱的路径
+        cout << "尝试穿越陷阱路径..." << endl;
+        auto trapPath = findPathDFS(maze, playerPos, target, false);
+
+        if (!trapPath.empty()) {
+            cout << "找到穿越陷阱路径，共" << trapPath.size() << "步" << endl;
+
+            // 沿路径移动
+            for (const auto& nextPos : trapPath) {
+                playerPos = nextPos;
+                steps++;
+                fullPath.push_back(playerPos);
+
+                // 处理当前位置的单元格
+                char cellType = maze[playerPos.first][playerPos.second].type;
+
+                if (cellType == 'G' || cellType == 'T') {
+                    int value = getResourceValue(cellType);
+                    totalScore += value;
+
+                    if (cellType == 'T') {
+                        cout << "触发陷阱，损失 " << (-value) << " 分。";
+                    }
+                    else {
+                        cout << "收集资源 '" << cellType << "' 获得 " << value << " 分。";
+                    }
+                    maze[playerPos.first][playerPos.second].type = ' ';
+                }
+                // ===== 添加机关处理 =====
+                else if (cellType == 'L') {
+                    bool unlocked = tryUnlockLocker(maze, playerPos, totalScore);
+                    if (unlocked) {
+                        cout << "机关已解锁，变为通路。";
+                    }
+                }
+                else if (cellType == 'B') {
+                    triggerBossFight(maze, playerPos, totalScore);
+                    cout << "触发Boss战！当前位置: (" << playerPos.first << ", " << playerPos.second << ")"
+                        << " 总得分: " << totalScore << endl;
+                }
+                // ===== 结束添加 =====
+                // ===== 新增：视野内资源检测和收集 =====
                 auto visibleResources = getVisibleResources(maze, playerPos, 1);
                 for (const auto& res : visibleResources) {
                     pair<int, int> resPos = res.first;
