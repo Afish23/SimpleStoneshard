@@ -219,11 +219,7 @@ bool moveToPosition(
 
                 // 处理当前位置的单元格
                 char cellType = maze[playerPos.first][playerPos.second].type;
-                if (cellType == 'B') {
-                    triggerBossFight(maze, playerPos, totalScore);
-                    cout << "触发Boss战！当前位置: (" << playerPos.first << ", " << playerPos.second << ")"
-                        << " 总得分: " << totalScore << endl;
-                }
+                
                 if (cellType == 'G' || cellType == 'T') {
                     int value = getResourceValue(cellType);
                     totalScore += value;
@@ -243,7 +239,40 @@ bool moveToPosition(
                         cout << "机关已解锁，变为通路。";
                     }
                 }
+                else if (cellType == 'B') {
+                    triggerBossFight(maze, playerPos, totalScore);
+                    cout << "触发Boss战！当前位置: (" << playerPos.first << ", " << playerPos.second << ")"
+                        << " 总得分: " << totalScore << endl;
+                }
                 // ===== 结束添加 =====
+                // // ===== 新增：视野内资源检测和收集 =====
+                auto visibleResources = getVisibleResources(maze, playerPos, 1);
+                for (const auto& res : visibleResources) {
+                    pair<int, int> resPos = res.first;
+                    char resType = res.second;
+                    string posKey = to_string(resPos.first) + "," + to_string(resPos.second);
+
+                    // 跳过已访问过的资源
+                    if (visited.find(posKey) != visited.end()) continue;
+
+                    // 收集金币
+                    if (resType == 'G') {
+                        int value = getResourceValue(resType);
+                        totalScore += value;
+                        maze[resPos.first][resPos.second].type = ' '; // 移除金币
+                        visited.insert(posKey); // 标记为已访问
+
+                        cout << "发现并收集视野内金币("
+                            << resPos.first << "," << resPos.second
+                            << ") 获得" << value << "分！";
+                    }
+                    // 标记Boss位置（不立即触发）
+                    else if (resType == 'B') {
+                        cout << "发现Boss位置("
+                            << resPos.first << "," << resPos.second << ")!";
+                    }
+                }
+                // ===== 结束新增 =====
                 // ... (其他类型处理不变)
 
                 cout << " 当前位置: (" << playerPos.first << ", " << playerPos.second << ")"
@@ -442,12 +471,10 @@ void greedyResourceCollection(
         }
         // 深度搜索模式（视野内无资源）
         else {
-            cout << "视野内无资源，转入深度搜索模式..." << endl;
-
-            // 使用DFS探索所有路径（包括死路）
+            cout << "\n===== 进入深度搜索模式 =====" << endl;
             bool newResourceFound = false;
             exploreDFS(maze, playerPos, exitPos, totalScore, steps, visited, fullPath, newResourceFound);
-
+            cout << "===== 深度搜索结束 =====" << endl;
             // 检查是否到达出口
             if (playerPos == exitPos) {
                 break;
@@ -666,12 +693,24 @@ void exploreDFS(
     explored[playerPos.first][playerPos.second] = true;
     visitedInDFS[playerPos.first][playerPos.second] = true;
 
+    // +++ 新增：输出开始信息 +++
+    cout << "【DFS开始】从位置(" << playerPos.first << ", " << playerPos.second << ")\n";
+
     // 初始化新资源标志
     newResourceFound = false;
 
     while (!s.empty()) {
         auto curr = s.top();
         s.pop();
+
+        // +++ 新增：输出当前位置信息 +++
+        cout << "【DFS位置】当前: (" << curr.first << ", " << curr.second << ")";
+        if (curr != playerPos) {
+            cout << " (回溯)" << endl;
+        }
+        else {
+            cout << " (前进)" << endl;
+        }
 
         // 移动到当前位置
         if (curr != playerPos) {
@@ -683,43 +722,44 @@ void exploreDFS(
             string posKey = to_string(playerPos.first) + "," + to_string(playerPos.second);
             visited.insert(posKey);
 
+            // +++ 新增：输出移动信息 +++
+            cout << "  -> 移动到(" << playerPos.first << ", " << playerPos.second << ")";
+            cout << " 步数: " << steps << endl;
+
             // === 关键修改：只检测资源但不收集 ===
             char cellType = maze[playerPos.first][playerPos.second].type;
             if (cellType == 'G' || cellType == 'B') {
                 // 仅设置标志，不实际收集资源
                 newResourceFound = true;
-                cout << "发现资源 '" << cellType << "' 在位置 ("
-                    << playerPos.first << ", " << playerPos.second << ")"
-                    << endl;
+                cout << "  发现资源 '" << cellType << "'" << endl;
             }
             // === 新增：处理陷阱 ===
             else if (cellType == 'T') {
                 int value = getResourceValue(cellType);
                 totalScore += value;
-                cout << "触发陷阱，损失 " << (-value) << " 分。";
+                cout << "  触发陷阱，损失 " << (-value) << " 分。" << endl;
                 maze[playerPos.first][playerPos.second].type = ' '; // 陷阱触发后移除
-                cout << " 当前位置: (" << playerPos.first << ", " << playerPos.second << ")"
-                    << " 总得分: " << totalScore
-                    << endl;
             }
             else if (cellType == 'L') {
                 // 只有在没有其他路径时才尝试解谜
+                cout << "  发现机关，尝试解谜..." << endl;
                 bool unlocked = tryUnlockLocker(maze, playerPos, totalScore);
                 if (unlocked) {
-                    cout << "机关已解锁，变为通路。";
+                    cout << "  机关解锁成功！" << endl;
                     maze[playerPos.first][playerPos.second].type = ' ';
                 }
                 else {
                     // 解谜失败时，移除DFS探索标记
                     explored[playerPos.first][playerPos.second] = false;
                     visitedInDFS[playerPos.first][playerPos.second] = false;
+                    cout << "  机关解锁失败！" << endl;
                 }
             }
         }
 
         // 如果到达出口
         if (playerPos == exitPos) {
-            cout << "DFS探索中发现出口位置" << endl;
+            cout << "【DFS结束】发现出口位置(" << playerPos.first << ", " << playerPos.second << ")" << endl;
             return;
         }
 
@@ -732,7 +772,7 @@ void exploreDFS(
             }
         }
         if (!filteredResources.empty()) {
-            cout << "发现视野内资源，中断深度搜索！" << endl;
+            cout << "【DFS中断】发现视野内资源!" << endl;
             newResourceFound = true;
             return;
         }
@@ -741,6 +781,9 @@ void exploreDFS(
         bool foundUnvisited = false;
         vector<pair<int, int>> shuffled = directions;
         random_shuffle(shuffled.begin(), shuffled.end());
+
+        // +++ 新增：输出邻居探索信息 +++
+        cout << "  探索邻居: ";
 
         // 首先尝试非陷阱路径
         for (const auto& dir : shuffled) {
@@ -761,12 +804,14 @@ void exploreDFS(
                     visitedInDFS[nx][ny] = true;
                     s.push({ nx, ny });
                     foundUnvisited = true;
+                    cout << "(" << nx << "," << ny << ":" << maze[nx][ny].type << ") "; // 输出邻居信息
                 }
             }
         }
 
         // === 修改：如果没有非陷阱路径，优先考虑机关 ===
         if (!foundUnvisited) {
+            cout << "\n  无安全路径，尝试机关... ";
             // 优先考虑机关位置
             for (const auto& dir : shuffled) {
                 int nx = playerPos.first + dir.first;
@@ -783,13 +828,14 @@ void exploreDFS(
                         visitedInDFS[nx][ny] = true;
                         s.push({ nx, ny });
                         foundUnvisited = true;
-                        cout << "无安全路径，优先选择机关位置 (" << nx << ", " << ny << ")" << endl;
+                        cout << "(" << nx << "," << ny << ":" << maze[nx][ny].type << ") ";
                     }
                 }
             }
 
             // 如果没有找到机关，再考虑陷阱
             if (!foundUnvisited) {
+                cout << "\n  无机关路径，尝试陷阱... ";
                 for (const auto& dir : shuffled) {
                     int nx = playerPos.first + dir.first;
                     int ny = playerPos.second + dir.second;
@@ -805,24 +851,22 @@ void exploreDFS(
                             visitedInDFS[nx][ny] = true;
                             s.push({ nx, ny });
                             foundUnvisited = true;
-                            cout << "无安全路径，选择陷阱位置 (" << nx << ", " << ny << ")" << endl;
+                            cout << "(" << nx << "," << ny << ":" << maze[nx][ny].type << ") ";
                         }
                     }
                 }
             }
         }
+        cout << endl; // 结束邻居输出
 
         // 回溯逻辑
         if (!foundUnvisited && !s.empty()) {
-            playerPos = s.top();
-            steps++;
-            fullPath.push_back(playerPos);
-            cout << "回溯到位置: (" << playerPos.first << ", " << playerPos.second << ")" << endl;
+            auto next = s.top();
+            cout << "【回溯】从(" << playerPos.first << "," << playerPos.second
+                << ") 到 (" << next.first << "," << next.second << ")\n";
         }
     }
 
-    //// 超时保护
-    //if (steps > 1000) {
-    //    cout << "DFS探索超时，强制退出" << endl;
-    //}
+    // +++ 新增：输出结束信息 +++
+    cout << "【DFS结束】栈已空，搜索完成\n";
 }
