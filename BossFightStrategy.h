@@ -12,7 +12,6 @@ struct State {
     int turn;                    // 总用回合数
     vector<int> cooldowns;       // 技能冷却
     vector<string> actions;      // 技能序列
-
     bool operator<(const State& rhs) const {
         // 用于set/map判重
         return tie(bossIdx, bossHp, cooldowns) < tie(rhs.bossIdx, rhs.bossHp, rhs.cooldowns);
