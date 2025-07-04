@@ -155,6 +155,7 @@
     <ClCompile Include="PuzzleSolver.cpp" />
     <ClCompile Include="ResourcePathPlanner.cpp" />
     <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="Visualizer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BossFightStrategy.h" />
@@ -166,6 +167,7 @@
     <ClInclude Include="PuzzleSolver.h" />
     <ClInclude Include="ResourcePathPlanner.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="Visualizer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="boss_case.json" />

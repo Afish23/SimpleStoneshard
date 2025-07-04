@@ -1,5 +1,5 @@
 #pragma once
-//璐績瀹炴椂璧勬簮鎷惧彇绛栫暐妯″潡
+
 #include <iostream>
 #include <algorithm>
 #include <unordered_set>
@@ -15,6 +15,7 @@
 #include"GameObjects.h"
 #include"json.hpp"
 using namespace std;
+
 
 vector<pair<pair<int, int>, char>> getVisibleResources(
     const vector<vector<MazeCell>>& maze,
@@ -38,13 +39,23 @@ bool moveToPosition(
     int& totalScore,
     int& steps,
     unordered_set<string>& visited,
-    vector<pair<int, int>>& fullPath);
+    vector<pair<int, int>>& fullPath,
+    vector<pair<int, int>>& bossSteps  // 添加这个参数
+);
 
 void greedyResourceCollection(
+    std::vector<std::vector<MazeCell>>& maze,
+    std::pair<int, int> startPos,
+    std::pair<int, int> exitPos,
+    std::vector<std::pair<int, int>>& fullPath,
+    std::vector<std::pair<int, int>>& bossSteps,
+    int& totalScore  // 添加分数引用参数
+);
+void finalizeBossFight(
     vector<vector<MazeCell>>& maze,
-    pair<int, int> startPos,
-    pair<int, int> exitPos);
-
+    pair<int, int> bossPos,
+    int& totalScore,
+    int turnsUsed);
 int getResourceValue(char cellType);
 int manhattanDistance(const pair<int, int>& a, const pair<int, int>& b);
 bool isPassable(char c);
@@ -58,3 +69,9 @@ void exploreDFS(
     unordered_set<string>& visited,
     vector<pair<int, int>>& fullPath,
     bool& newResourceFound);
+
+bool triggerBossFight(
+    vector<vector<MazeCell>>& maze,
+    pair<int, int>& playerPos,
+    int& totalScore,
+    bool delayScoreUpdate);
