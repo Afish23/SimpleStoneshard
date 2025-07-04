@@ -197,5 +197,5 @@ void fightBossVisualAuto(
     swprintf(finalMsg, 128, L"恭喜通关你用%d个回合击败了boss！", turn);
     drawBattleAuto(bossIdx, turn, totalBoss, bossHp, bossMaxHp, skills, cooldowns, -1, finalMsg, actions, actions.size());
     system("pause");
-    closegraph();
+    //closegraph();
 }

@@ -5,8 +5,16 @@
 #include <map>
 #include <functional>
 
-MazeVisualizer::MazeVisualizer(int n, int cellSize) : n(n), cellSize(cellSize) {
-    initgraph(n * cellSize + 2 * margin, n * cellSize + 2 * margin, SHOWCONSOLE);
+MazeVisualizer::MazeVisualizer(int n, int cellSize) : n(n) {
+    // 计算合适的cellSize使迷宫能适应800x600窗口
+    int maxPossibleCellSize = min(
+        (WINDOW_WIDTH - 2 * margin) / n,
+        (WINDOW_HEIGHT - 2 * margin) / n
+    );
+    this->cellSize = min(cellSize, maxPossibleCellSize);
+
+    // 固定窗口大小为800x600
+    initgraph(WINDOW_WIDTH, WINDOW_HEIGHT, SHOWCONSOLE);
     setbkcolor(WHITE);
     cleardevice();
 }
@@ -17,10 +25,15 @@ MazeVisualizer::~MazeVisualizer() {
 
 void MazeVisualizer::drawMaze(const std::vector<std::vector<MazeCell>>& maze) {
     cleardevice();
+    // 计算居中偏移量
+    int mazeWidth = n * cellSize;
+    int mazeHeight = n * cellSize;
+    int offsetX = (WINDOW_WIDTH - mazeWidth) / 2;
+    int offsetY = (WINDOW_HEIGHT - mazeHeight) / 2;
     for (int i = 0; i < n; ++i)
         for (int j = 0; j < n; ++j) {
-            int x = margin + j * cellSize;
-            int y = margin + i * cellSize;
+            int x = offsetX + j * cellSize;
+            int y = offsetY + i * cellSize;
             char type = maze[i][j].type;
             COLORREF color = COLOR_EMPTY;
             switch (type) {
@@ -50,17 +63,27 @@ void MazeVisualizer::drawMaze(const std::vector<std::vector<MazeCell>>& maze) {
 }
 
 void MazeVisualizer::drawPath(const std::vector<std::pair<int, int>>& path, COLORREF color) {
+    int mazeWidth = n * cellSize;
+    int mazeHeight = n * cellSize;
+    int offsetX = (WINDOW_WIDTH - mazeWidth) / 2;
+    int offsetY = (WINDOW_HEIGHT - mazeHeight) / 2;
+
     for (auto& p : path) {
-        int x = margin + p.second * cellSize;
-        int y = margin + p.first * cellSize;
+        int x = offsetX + p.second * cellSize;
+        int y = offsetY + p.first * cellSize;
         setfillcolor(color);
         solidrectangle(x, y, x + cellSize, y + cellSize);
     }
 }
 
 void MazeVisualizer::drawPlayer(const std::pair<int, int>& pos, COLORREF color) {
-    int x = margin + pos.second * cellSize + cellSize / 6;
-    int y = margin + pos.first * cellSize + cellSize / 6;
+    int mazeWidth = n * cellSize;
+    int mazeHeight = n * cellSize;
+    int offsetX = (WINDOW_WIDTH - mazeWidth) / 2;
+    int offsetY = (WINDOW_HEIGHT - mazeHeight) / 2;
+
+    int x = offsetX + pos.second * cellSize + cellSize / 6;
+    int y = offsetY + pos.first * cellSize + cellSize / 6;
     setfillcolor(color);
     fillcircle(x + cellSize / 3, y + cellSize / 3, cellSize / 4);
 }
@@ -98,7 +121,6 @@ void MazeVisualizer::animateGreedy(
     int delayMs,
     function<void(const pair<int, int>&)> bossCallback)
 {
-    // 建立Boss位置索引
     unordered_set<string> bossPositions;
     for (auto& pos : bossSteps) {
         bossPositions.insert(to_string(pos.first) + "," + to_string(pos.second));
@@ -116,8 +138,16 @@ void MazeVisualizer::animateGreedy(
         string posKey = to_string(pos.first) + "," + to_string(pos.second);
         if (bossPositions.count(posKey) && maze[pos.first][pos.second].type == 'B') {
             drawPlayer(pos, COLOR_BOSS);
+            FlushBatchDraw(); // 确保在回调前绘制完成
+
             if (bossCallback) {
-                bossCallback(pos); // 这会触发Boss战斗
+                bossCallback(pos); // 触发Boss战斗
+
+                // 战斗结束后重新绘制当前状态
+                drawMaze(maze);
+                drawPath(subPath, COLOR_GREEDY);
+                drawPlayer(pos);
+                FlushBatchDraw();
             }
         }
         else {

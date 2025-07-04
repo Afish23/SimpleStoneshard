@@ -181,9 +181,9 @@ int main() {
                 vector<int> bossTurnsUsed; // 存储每个Boss战的回合数
 
                 vis2.animateGreedy(
-                    fullPath, initialMaze, bossSteps, 100, // 使用 initialMaze 而非 greedyMaze
+                    fullPath, initialMaze, bossSteps, 100, // 使用greedyMaze而不是initialMaze
                     [&](const pair<int, int>& pos) {
-                        if (greedyMaze[pos.first][pos.second].type == 'B') {
+                        if (initialMaze[pos.first][pos.second].type == 'B') {
                             // 创建非const副本用于修改
                             pair<int, int> nonConstPos = pos;
 
@@ -216,17 +216,13 @@ int main() {
                             // 显示战斗动画
                             fightBossVisualAuto(bossHps, skills, result.second);
 
-                            // 记录战斗结果
-                            pendingBossFights.push_back(nonConstPos);
-                            bossTurnsUsed.push_back(turns);
-
-                            // 立即更新迷宫状态
+                            // 更新迷宫状态
                             totalScore -= turns;
-                            greedyMaze[pos.first][pos.second].type = ' ';
-                            vis2.drawMaze(greedyMaze);
-                            FlushBatchDraw();
+                            initialMaze[pos.first][pos.second].type = ' ';
 
-                            cout << "触发Boss战 at (" << pos.first << "," << pos.second << ")" << endl;
+                            // 立即重绘迷宫
+                            vis2.drawMaze(initialMaze);
+                            FlushBatchDraw();
                         }
                     }
                 );

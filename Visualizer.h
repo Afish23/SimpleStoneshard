@@ -16,7 +16,8 @@
 #define COLOR_EXIT RGB(255, 0, 255)
 #define COLOR_EMPTY RGB(240, 240, 240)
 #define COLOR_WALL RGB(100, 100, 100)
-
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 class MazeVisualizer {
 public:
     MazeVisualizer(int n, int cellSize = 50);
