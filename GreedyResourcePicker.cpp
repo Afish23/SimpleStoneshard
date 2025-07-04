@@ -335,7 +335,11 @@ bool moveToPosition(
                 }
                 // ===== 结束添加 =====
                 // ===== 新增：视野内资源检测和收集 =====
+               // 修改后的视野检测部分（只检测不收集）
                 auto visibleResources = getVisibleResources(maze, playerPos, 1);
+                vector<pair<int, int>> goldPositions;  // 存储视野内未收集的金币位置
+
+                // 首先扫描视野内的资源
                 for (const auto& res : visibleResources) {
                     pair<int, int> resPos = res.first;
                     char resType = res.second;
@@ -344,21 +348,45 @@ bool moveToPosition(
                     // 跳过已访问过的资源
                     if (visited.find(posKey) != visited.end()) continue;
 
-                    // 收集金币
                     if (resType == 'G') {
-                        int value = getResourceValue(resType);
-                        totalScore += value;
-                        maze[resPos.first][resPos.second].type = ' '; // 移除金币
-                        visited.insert(posKey); // 标记为已访问
-
-                        cout << "发现并收集视野内金币("
-                            << resPos.first << "," << resPos.second
-                            << ") 获得" << value << "分！";
+                        goldPositions.push_back(resPos);
+                        cout << "发现视野内金币(" << resPos.first << "," << resPos.second << ")" << endl;
                     }
-                    // 标记Boss位置（不立即触发）
                     else if (resType == 'B') {
-                        cout << "发现Boss位置("
-                            << resPos.first << "," << resPos.second << ")!";
+                        cout << "发现Boss位置(" << resPos.first << "," << resPos.second << ")!";
+                    }
+                }
+
+                // 如果有金币，优先前往最近的金币位置
+                if (!goldPositions.empty()) {
+                    // 找出最近的金币
+                    pair<int, int> nearestGold = goldPositions[0];
+                    int minDistance = manhattanDistance(playerPos, nearestGold);
+
+                    for (const auto& goldPos : goldPositions) {
+                        int dist = manhattanDistance(playerPos, goldPos);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            nearestGold = goldPos;
+                        }
+                    }
+
+                    cout << "正在前往最近的金币位置(" << nearestGold.first << "," << nearestGold.second << ")..." << endl;
+
+                    // 移动到金币位置
+                    bool moveSuccess = moveToPosition(maze, playerPos, nearestGold, totalScore, steps, visited, fullPath, bossSteps);
+
+                    if (moveSuccess && playerPos == nearestGold) {
+                        // 到达金币位置后收集
+                        string posKey = to_string(playerPos.first) + "," + to_string(playerPos.second);
+                        if (visited.find(posKey) == visited.end()) {
+                            int value = getResourceValue('G');
+                            totalScore += value;
+                            maze[playerPos.first][playerPos.second].type = ' ';
+                            visited.insert(posKey);
+                            cout << "成功收集金币(" << playerPos.first << "," << playerPos.second
+                                << ")，获得" << value << "分！" << endl;
+                        }
                     }
                 }
                 // ===== 结束新增 =====
@@ -422,8 +450,10 @@ bool moveToPosition(
                     }
                 }
                 // ===== 结束添加 =====
-                // ===== 新增：视野内资源检测和收集 =====
                 auto visibleResources = getVisibleResources(maze, playerPos, 1);
+                vector<pair<int, int>> goldPositions;  // 存储视野内未收集的金币位置
+
+                // 首先扫描视野内的资源
                 for (const auto& res : visibleResources) {
                     pair<int, int> resPos = res.first;
                     char resType = res.second;
@@ -432,21 +462,45 @@ bool moveToPosition(
                     // 跳过已访问过的资源
                     if (visited.find(posKey) != visited.end()) continue;
 
-                    // 收集金币
                     if (resType == 'G') {
-                        int value = getResourceValue(resType);
-                        totalScore += value;
-                        maze[resPos.first][resPos.second].type = ' '; // 移除金币
-                        visited.insert(posKey); // 标记为已访问
-
-                        cout << "发现并收集视野内金币("
-                            << resPos.first << "," << resPos.second
-                            << ") 获得" << value << "分！";
+                        goldPositions.push_back(resPos);
+                        cout << "发现视野内金币(" << resPos.first << "," << resPos.second << ")" << endl;
                     }
-                    // 标记Boss位置（不立即触发）
                     else if (resType == 'B') {
-                        cout << "发现Boss位置("
-                            << resPos.first << "," << resPos.second << ")!";
+                        cout << "发现Boss位置(" << resPos.first << "," << resPos.second << ")!";
+                    }
+                }
+
+                // 如果有金币，优先前往最近的金币位置
+                if (!goldPositions.empty()) {
+                    // 找出最近的金币
+                    pair<int, int> nearestGold = goldPositions[0];
+                    int minDistance = manhattanDistance(playerPos, nearestGold);
+
+                    for (const auto& goldPos : goldPositions) {
+                        int dist = manhattanDistance(playerPos, goldPos);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            nearestGold = goldPos;
+                        }
+                    }
+
+                    cout << "正在前往最近的金币位置(" << nearestGold.first << "," << nearestGold.second << ")..." << endl;
+
+                    // 移动到金币位置
+                    bool moveSuccess = moveToPosition(maze, playerPos, nearestGold, totalScore, steps, visited, fullPath, bossSteps);
+
+                    if (moveSuccess && playerPos == nearestGold) {
+                        // 到达金币位置后收集
+                        string posKey = to_string(playerPos.first) + "," + to_string(playerPos.second);
+                        if (visited.find(posKey) == visited.end()) {
+                            int value = getResourceValue('G');
+                            totalScore += value;
+                            maze[playerPos.first][playerPos.second].type = ' ';
+                            visited.insert(posKey);
+                            cout << "成功收集金币(" << playerPos.first << "," << playerPos.second
+                                << ")，获得" << value << "分！" << endl;
+                        }
                     }
                 }
                 // ===== 结束新增 =====
